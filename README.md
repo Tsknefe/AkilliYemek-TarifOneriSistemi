@@ -125,7 +125,6 @@ tamamen otomatik oluşturur.
 
 4️⃣ Uygulamayı Çalıştır
 bash
-Kodu kopyala
 dotnet run
 Tarayıcıdan aç:
 
