@@ -1,6 +1,8 @@
 using AkilliYemekTarifOneriSistemi.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AkilliYemekTarifOneriSistemi.Models;
+
 
 namespace AkilliYemekTarifOneriSistemi
 {
