@@ -44,14 +44,17 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
 
             var recipe = await _context.Recipes
                 .Include(r => r.NutritionFacts)
+                .Include(r => r.RecipeIngredients)
+                    .ThenInclude(ri => ri.Ingredient)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (recipe == null)
                 return NotFound();
 
             return View(recipe);
-
         }
+
+
 
         //get:/recipes/create
         public IActionResult Create()
@@ -63,16 +66,43 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            [Bind("Name,Description,CookingTime,Servings,DietType")]
-            Recipe recipe)
+     [Bind("Name,Description,CookingTime,Servings,DietType")] Recipe recipe)
         {
-            if (!ModelState.IsValid)
-                return View(recipe);
+            Console.WriteLine(">>> CREATE POST METODU ÇALIŞTI");
 
-            _context.Add(recipe);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine(">>> MODELSTATE INVALID (Geçersiz)");
+
+                // Hangi alanlar hatalı?
+                foreach (var err in ModelState)
+                {
+                    if (err.Value.Errors.Count > 0)
+                    {
+                        Console.WriteLine($"Hata: {err.Key} => {err.Value.Errors[0].ErrorMessage}");
+                    }
+                }
+
+                return View(recipe);
+            }
+
+            Console.WriteLine(">>> MODELSTATE VALID (Geçerli)");
+            Console.WriteLine(">>> VERİTABANINA KAYDEDİYOR...");
+
+            try
+            {
+                _context.Add(recipe);
+                await _context.SaveChangesAsync();
+                Console.WriteLine(">>> KAYIT BAŞARILI 🔥🔥🔥");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(">>> HATA OLDU ❌: " + ex.Message);
+            }
+
             return RedirectToAction(nameof(Index));
         }
+
 
         //Get:/recipes/edit/5
         public async Task<IActionResult> Edit(int? id)

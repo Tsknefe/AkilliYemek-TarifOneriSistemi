@@ -1,0 +1,36 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+
+<h2 class="mb-4">✏️ Tarif Düzenle</h2>
+
+<form asp-action="Edit" method="post" class="card p-4 shadow-sm">
+
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label>Tarif Adı</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Açıklama</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Pişirme Süresi</label>
+        <input asp-for="CookingTime" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Servis Sayısı</label>
+        <input asp-for="Servings" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Diyet Tipi</label>
+        <input asp-for="DietType" class="form-control" />
+    </div>
+
+    <button class="btn btn-warning">Güncelle</button>
+    <a href="/Recipes" class="btn btn-secondary">Geri</a>
+</form>

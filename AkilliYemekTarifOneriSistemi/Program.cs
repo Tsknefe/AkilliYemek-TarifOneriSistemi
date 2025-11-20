@@ -1,7 +1,9 @@
 using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Services.Implementations;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using AkilliYemekTarifOneriSistemi.Models;
 
 
 namespace AkilliYemekTarifOneriSistemi
@@ -22,6 +24,9 @@ namespace AkilliYemekTarifOneriSistemi
                 .AddRoles<IdentityRole>() //Burada false yapmamýzýn nedeni admin/user kontrolü için 
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddControllersWithViews();
+            builder.Services.AddScoped<INutritionService, NutritionService>();
+            builder.Services.AddScoped<IIngredientService, IngredientService>();
+
 
             var app = builder.Build();
 

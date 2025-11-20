@@ -7,6 +7,9 @@ namespace AkilliYemekTarifOneriSistemi.Models
     public class Recipe
     {
         public int Id { get; set; }
+        public ICollection<RecipeIngredient>? RecipeIngredients { get; set; }
+        public NutritionFacts? NutritionFacts { get; set; }
+
 
         //Data Annotians kısımları validations kısımları için 
         [Required(ErrorMessage="Tarif Adının Girilmesi Zorunludur")]
@@ -28,7 +31,6 @@ namespace AkilliYemekTarifOneriSistemi.Models
 
 
 
-        public ICollection<RecipeIngredient> RecipeIngredients { get; set; }
-        public NutritionFacts NutritionFacts { get; set; }
+        
     }
 }

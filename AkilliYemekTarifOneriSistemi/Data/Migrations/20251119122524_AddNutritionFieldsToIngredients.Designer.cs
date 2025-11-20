@@ -4,6 +4,7 @@ using AkilliYemekTarifOneriSistemi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkilliYemekTarifOneriSistemi.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251119122524_AddNutritionFieldsToIngredients")]
+    partial class AddNutritionFieldsToIngredients
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,12 +33,33 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("Calories100g")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Carbs100g")
+                        .HasColumnType("float");
+
                     b.Property<string>("EnglishName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Fat100g")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Fiber100g")
+                        .HasColumnType("float");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Protein100g")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Sodium100g")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Sugar100g")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 

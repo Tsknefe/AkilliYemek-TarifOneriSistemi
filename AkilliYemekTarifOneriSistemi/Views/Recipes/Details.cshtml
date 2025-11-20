@@ -1,0 +1,118 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+
+@{
+    ViewData["Title"] = "Tarif Detayı";
+}
+
+<h2 class="mb-4">@Model.Name</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <p><strong>Açıklama:</strong> @Model.Description</p>
+    <p><strong>Pişirme Süresi:</strong> @Model.CookingTime dk</p>
+    <p><strong>Servis:</strong> @Model.Servings kişilik</p>
+    <p><strong>Diyet Tipi:</strong> @Model.DietType</p>
+
+    <a href="/Recipes/Edit/@Model.Id" class="btn btn-warning">Düzenle</a>
+    <a href="/Recipes" class="btn btn-secondary">Geri</a>
+</div>
+
+
+<!-- MALZEME LİSTESİ -->
+<h3 class="mt-4">🍅 Malzemeler</h3>
+
+<a class="btn btn-primary btn-sm mb-3" href="/RecipeIngredients/Add/@Model.Id">
+    ➕ Malzeme Ekle
+</a>
+
+@if (Model.RecipeIngredients == null || !Model.RecipeIngredients.Any())
+{
+    <p class="text-muted">Bu tarif için henüz malzeme eklenmemiş.</p>
+}
+else
+{
+    <table class="table table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Malzeme</th>
+                <th>Miktar</th>
+                <th>Birim</th>
+                <th style="width: 170px;">İşlemler</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model.RecipeIngredients)
+            {
+                <tr>
+                    <td>@item.Ingredient.Name</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Unit</td>
+
+                    <td>
+                        <a href="/RecipeIngredients/Edit/@item.Id"
+                           class="btn btn-warning btn-sm">
+                            Düzenle
+                        </a>
+
+                        <a href="/RecipeIngredients/Delete/@item.Id"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Bu malzemeyi silmek istediğine emin misin?');">
+                            Sil
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+<!-- BESİN DEĞERLERİ -->
+<h3 class="mt-5">🍏 Besin Değerleri</h3>
+
+@if (Model.NutritionFacts == null)
+{
+    <p class="text-muted">Besin bilgisi henüz hesaplanmadı.</p>
+}
+else
+{
+    <table class="table table-bordered shadow-sm w-50">
+        <thead class="table-light">
+            <tr>
+                <th>Bileşen</th>
+                <th>Değer</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Kalori</td>
+                <td>@Model.NutritionFacts.Calories kcal</td>
+            </tr>
+            <tr>
+                <td>Protein</td>
+                <td>@Model.NutritionFacts.Protein g</td>
+            </tr>
+            <tr>
+                <td>Yağ</td>
+                <td>@Model.NutritionFacts.Fat g</td>
+            </tr>
+            <tr>
+                <td>Karbonhidrat</td>
+                <td>@Model.NutritionFacts.Carbs g</td>
+            </tr>
+            <tr>
+                <td>Lif</td>
+                <td>@Model.NutritionFacts.Fiber g</td>
+            </tr>
+            <tr>
+                <td>Şeker</td>
+                <td>@Model.NutritionFacts.Sugar g</td>
+            </tr>
+            <tr>
+                <td>Sodyum</td>
+                <td>@Model.NutritionFacts.Sodium mg</td>
+            </tr>
+        </tbody>
+    </table>
+}
