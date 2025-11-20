@@ -24,23 +24,28 @@ namespace AkilliYemekTarifOneriSistemi
                 .AddRoles<IdentityRole>() //Burada false yapmamýzýn nedeni admin/user kontrolü için 
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
             builder.Services.AddScoped<INutritionService, NutritionService>();
             builder.Services.AddScoped<IIngredientService, IngredientService>();
+            builder.Services.AddScoped<IRecipeService, RecipeService>();
 
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.UseMigrationsEndPoint();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
+
 
             app.UseHttpsRedirection();
             app.UseRouting();

@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 {
+
+
     public class IngredientService : IIngredientService
     {
         private readonly ApplicationDbContext _context;
@@ -21,15 +21,16 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             return await _context.Ingredients.ToListAsync();
         }
 
-        public async Task<Ingredient> GetByIdAsync(int id)
+        public async Task<Ingredient?> GetByIdAsync(int id)
         {
             return await _context.Ingredients.FindAsync(id);
         }
 
-        public async Task AddAsync(Ingredient ingredient)
+        public async Task<Ingredient> CreateAsync(Ingredient ingredient)
         {
             _context.Ingredients.Add(ingredient);
             await _context.SaveChangesAsync();
+            return ingredient;
         }
 
         public async Task UpdateAsync(Ingredient ingredient)
@@ -41,6 +42,8 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
         public async Task DeleteAsync(int id)
         {
             var ingredient = await GetByIdAsync(id);
+            if (ingredient is null) return;
+
             _context.Ingredients.Remove(ingredient);
             await _context.SaveChangesAsync();
         }
