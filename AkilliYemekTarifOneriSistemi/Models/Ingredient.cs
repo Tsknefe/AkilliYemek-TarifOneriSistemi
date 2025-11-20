@@ -2,7 +2,12 @@
 {
     public class Ingredient
     {
-        public string Name { get; set; }
         public int Id { get; set; }
+
+        // Kullanıcının gördüğü Türkçe isim
+        public string Name { get; set; } = string.Empty;
+
+        // API araması için İngilizce isim
+        public string? EnglishName { get; set; }
     }
 }

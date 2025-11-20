@@ -1,7 +1,9 @@
 using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Services.Implementations;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using AkilliYemekTarifOneriSistemi.Models;
 
 
 namespace AkilliYemekTarifOneriSistemi
@@ -21,6 +23,9 @@ namespace AkilliYemekTarifOneriSistemi
             builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddControllersWithViews();
+            builder.Services.AddScoped<INutritionService, NutritionService>();
+            builder.Services.AddScoped<IIngredientService, IngredientService>();
+
 
             var app = builder.Build();
 

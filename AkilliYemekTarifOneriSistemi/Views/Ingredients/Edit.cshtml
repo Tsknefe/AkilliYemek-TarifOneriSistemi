@@ -1,0 +1,27 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+
+@{
+    ViewData["Title"] = "Malzemeyi Düzenle";
+}
+
+<h2 class="mb-4">✏️ Malzemeyi Düzenle</h2>
+
+<form asp-action="Edit" method="post" class="card p-4 shadow-sm">
+
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label class="form-label">Türkçe Adı</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">İngilizce Adı (API)</label>
+        <input asp-for="EnglishName" class="form-control" />
+        <span asp-validation-for="EnglishName" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-warning">Güncelle</button>
+    <a href="/Ingredients" class="btn btn-secondary">Geri Dön</a>
+</form>
