@@ -1,0 +1,84 @@
+﻿@model IEnumerable<AkilliYemekTarifOneriSistemi.Models.Recipe>
+
+@{
+    ViewData["Title"] = "Tarif Listesi";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<h2 class="mb-4">🍽️ Tarif Listesi</h2>
+
+<form method="get" class="d-flex mb-4">
+    <input type="text" name="search" value="@ViewBag.Search"
+           class="form-control me-2"
+           placeholder="Tarif ara (isim, açıklama, diyet tipi)...">
+    <button class="btn btn-primary">Ara</button>
+</form>
+
+@if (isAdmin)
+{
+    <a href="/Recipes/Create" class="btn btn-success mb-4">
+        ➕ Yeni Tarif Ekle
+    </a>
+}
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+
+        @foreach (var r in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="recipe-card">
+
+                    <!-- Görsel -->
+                    <div class="recipe-card-img-wrapper">
+                        @if (!string.IsNullOrEmpty(r.ImagePath))
+                        {
+                            <img src="@r.ImagePath" class="recipe-card-img" />
+                        }
+                        else
+                        {
+                            <img src="~/images/no-image.png" class="recipe-card-img" />
+                        }
+                    </div>
+
+                    <!-- İçerik -->
+                    <div class="p-3">
+
+                        <h4 class="recipe-title">@r.Name</h4>
+
+                        <p class="recipe-desc">
+                            @{
+                                var desc = r.Description.Length > 80
+                                ? r.Description.Substring(0, 80) + "..."
+                                : r.Description;
+                            }
+                            @desc
+                        </p>
+
+                        <p class="recipe-meta">
+                            ⏱️ @r.CookingTime dk &nbsp; | &nbsp; 🍽️ @r.Servings kişilik
+                            <br />
+                            🥗 <strong>@r.DietType</strong>
+                        </p>
+
+                        <a href="/Recipes/Details/@r.Id" class="btn btn-primary btn-sm">Detay</a>
+
+                        @if (isAdmin)
+                        {
+                            <a href="/Recipes/Edit/@r.Id" class="btn btn-warning btn-sm">Düzenle</a>
+                            <a href="/Recipes/Delete/@r.Id" class="btn btn-danger btn-sm">Sil</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+}
+else
+{
+    <div class="alert alert-info mt-4">
+        Şu anda kayıtlı tarif bulunmuyor.
+    </div>
+}

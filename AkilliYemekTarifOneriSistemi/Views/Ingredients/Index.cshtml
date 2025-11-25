@@ -1,0 +1,37 @@
+﻿@model IEnumerable<AkilliYemekTarifOneriSistemi.Models.Ingredient>
+
+@{
+    ViewData["Title"] = "Malzemeler";
+}
+
+<h2 class="mb-4">Malzemeler</h2>
+
+<a class="btn btn-primary mb-3" href="/Ingredients/Create">➕ Yeni Malzeme Ekle</a>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th style="width: 60px;">ID</th>
+            <th>Türkçe Ad</th>
+            <th>İngilizce Ad (API)</th>
+            <th style="width: 220px;">İşlemler</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.EnglishName</td>
+
+                <td>
+                    <a class="btn btn-sm btn-warning" href="/Ingredients/Edit/@item.Id">Düzenle</a>
+                    <a class="btn btn-sm btn-info" href="/Ingredients/Details/@item.Id">Detay</a>
+                    <a class="btn btn-sm btn-danger" href="/Ingredients/Delete/@item.Id">Sil</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,23 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.RecipeIngredient
+
+@{
+    ViewData["Title"] = "Malzemeyi Sil";
+}
+
+<h2 class="mb-4 text-danger">🗑️ Malzemeyi Sil</h2>
+
+<div class="card p-4 shadow-sm">
+
+    <h4>Bu malzemeyi silmek istediğine emin misin?</h4>
+
+    <p><strong>Malzeme:</strong> @Model.Ingredient.Name</p>
+    <p><strong>Miktar:</strong> @Model.Quantity @Model.Unit</p>
+
+    <form method="post" asp-action="Delete">
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        <button class="btn btn-danger">Evet, Sil</button>
+        <a href="/Recipes/Details/@Model.RecipeId" class="btn btn-secondary">İptal</a>
+    </form>
+
+</div>

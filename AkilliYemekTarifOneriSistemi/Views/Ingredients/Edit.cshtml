@@ -1,0 +1,32 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+
+@{
+    ViewData["Title"] = "Malzemeyi Düzenle";
+}
+
+<h2 class="mb-4">✏️ Malzemeyi Düzenle</h2>
+
+<form asp-action="Edit" method="post" class="card p-4 shadow-sm">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label class="form-label">Malzeme Adı (Türkçe)</label>
+        <input asp-for="Name" class="form-control" placeholder="Örn: Domates" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Malzeme Adı (İngilizce - API için)</label>
+        <input asp-for="EnglishName" class="form-control" placeholder="Örn: Tomato" />
+        <span asp-validation-for="EnglishName" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-warning">Güncelle</button>
+    <a href="/Ingredients" class="btn btn-secondary">Geri Dön</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

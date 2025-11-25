@@ -1,0 +1,16 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+
+@{
+    ViewData["Title"] = "Malzeme Detayı";
+}
+
+<h2 class="mb-4">📌 Malzeme Detayı</h2>
+
+<div class="card p-4 shadow-sm">
+    <p><strong>ID:</strong> @Model.Id</p>
+    <p><strong>Malzeme Adı (Türkçe):</strong> @Model.Name</p>
+    <p><strong>İngilizce Adı (API):</strong> @Model.EnglishName</p>
+
+    <a href="/Ingredients/Edit/@Model.Id" class="btn btn-warning">Düzenle</a>
+    <a href="/Ingredients" class="btn btn-secondary">Geri Dön</a>
+</div>

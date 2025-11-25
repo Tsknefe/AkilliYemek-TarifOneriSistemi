@@ -1,22 +1,23 @@
 ﻿using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    //Burada normal CRUD işlemlerini tanımladığımız yer
+    [Authorize(Roles = "Admin")]
     public class RecipesController : Controller
     {
         private readonly ApplicationDbContext _context;
-
 
         public RecipesController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        //Get:/recipes
+        // GET: /recipes
+        [AllowAnonymous]
         public async Task<IActionResult> Index(string search)
         {
             var query = _context.Recipes.AsQueryable();
@@ -27,16 +28,17 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                     e.Name.Contains(search) ||
                     e.Description.Contains(search) ||
                     e.DietType.Contains(search)
-
-                    );
+                );
             }
-            var recipes=await query.AsNoTracking().ToListAsync();
-            ViewBag.Search=search;
-            return View(recipes);
 
+            var recipes = await query.AsNoTracking().ToListAsync();
+            ViewBag.Search = search;
+
+            return View(recipes);
         }
 
-        //Get:/recipes/details/5
+        // GET: /recipes/details/5
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -44,37 +46,65 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
 
             var recipe = await _context.Recipes
                 .Include(r => r.NutritionFacts)
+                .Include(r => r.RecipeIngredients)
+                    .ThenInclude(ri => ri.Ingredient)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (recipe == null)
                 return NotFound();
 
             return View(recipe);
-
         }
 
-        //get:/recipes/create
+        // GET: /recipes/create
         public IActionResult Create()
         {
             return View();
         }
 
-        //Post:/recipes/create
+        // POST: /recipes/create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            [Bind("Name,Description,CookingTime,Servings,DietType")]
-            Recipe recipe)
+            [Bind("Name,Description,CookingTime,Servings,DietType")] Recipe recipe,
+            IFormFile? imageFile)
         {
+            Console.WriteLine(">>> CREATE POST METODU ÇALIŞTI");
+
             if (!ModelState.IsValid)
+            {
+                Console.WriteLine(">>> MODELSTATE INVALID");
                 return View(recipe);
+            }
+
+            // ⭐ Resim yükleme
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+                if (!Directory.Exists(uploadDir))
+                    Directory.CreateDirectory(uploadDir);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                string filePath = Path.Combine(uploadDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                recipe.ImagePath = "/uploads/" + fileName;
+            }
 
             _context.Add(recipe);
             await _context.SaveChangesAsync();
+
+            Console.WriteLine(">>> KAYIT BAŞARILI ✔");
+
             return RedirectToAction(nameof(Index));
         }
 
-        //Get:/recipes/edit/5
+        // GET: /recipes/edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -88,13 +118,14 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(recipe);
         }
 
-        //Post:/recipes/edit/5
+        // POST: /recipes/edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
             int id,
-            [Bind("Id,Name,Description,CookingTime,Servings,DietType")]
-            Recipe recipe)
+            [Bind("Id,Name,Description,CookingTime,Servings,DietType,ImagePath")]
+            Recipe recipe,
+            IFormFile? newImage)
         {
             if (id != recipe.Id)
                 return NotFound();
@@ -102,22 +133,31 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             if (!ModelState.IsValid)
                 return View(recipe);
 
-            try
+            // ⭐ Resim değiştirme (opsiyonel)
+            if (newImage != null && newImage.Length > 0)
             {
-                _context.Update(recipe);
-                await _context.SaveChangesAsync();
+                string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+                Directory.CreateDirectory(uploadDir);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(newImage.FileName);
+                string filePath = Path.Combine(uploadDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await newImage.CopyToAsync(stream);
+                }
+
+                recipe.ImagePath = "/uploads/" + fileName;
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RecipeExists(recipe.Id))
-                    return NotFound();
-                else
-                    throw;
-            }
+
+            _context.Update(recipe);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
-        //Get:/recipes/Delete/5
+        // GET: /recipes/delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -133,7 +173,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(recipe);
         }
 
-        //Post:/recipes/Delete/5
+        // POST: /recipes/delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -145,6 +185,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 _context.Recipes.Remove(recipe);
                 await _context.SaveChangesAsync();
             }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -152,6 +193,5 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         {
             return _context.Recipes.Any(r => r.Id == id);
         }
-
     }
 }

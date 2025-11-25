@@ -1,51 +1,132 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<!DOCTYPE html>
+<html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AkilliYemekTarifOneriSistemi</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - Akıllı Yemek Tarif Sistemi</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/AkilliYemekTarifOneriSistemi.styles.css" asp-append-version="true" />
+
+    <style>
+        /* --- NAVBAR --- */
+        .navbar-custom {
+            background: linear-gradient(90deg, #b30000, #660000);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: white !important;
+            letter-spacing: .5px;
+        }
+        .nav-link {
+            color: #f5f5f5 !important;
+            font-weight: 500;
+        }
+        .nav-link:hover {
+            color: #ffd1d1 !important;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: #111;
+            color: #bbb;
+            padding: 18px 0;
+            margin-top: 30px;
+        }
+    </style>
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AkilliYemekTarifOneriSistemi</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+
+    <!-- TOP NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm">
+        <div class="container">
+
+            <!-- LOGO -->
+            <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                <img src="~/images/logoo.png" alt="Logo" class="nav-logo">
+            </a>
+
+            <!-- MOBILE BUTTON -->
+            <button class="navbar-toggler navbar-dark" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- MENU -->
+            <div id="navbarNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index">Anasayfa</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Recipes" asp-action="Index">Tarifler</a>
+                    </li>
+
+                    <!-- Admin Menüsü -->
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Yönetim</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Ingredients" asp-action="Index">Malzemeler</a></li>
+                                <li><a class="dropdown-item" asp-controller="Recipes" asp-action="Create">Tarif Ekle</a></li>
+                            </ul>
+                        </li>
+                    }
+                </ul>
+
+                <!-- AUTH -->
+                <ul class="navbar-nav">
+                    @if (SignInManager.IsSignedIn(User))
+                    {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <span class="nav-link text-warning">👤 @User.Identity?.Name</span>
+                        </li>
+
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button class="btn btn-sm btn-light">Çıkış Yap</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item me-2">
+                            <a class="btn btn-sm btn-outline-light"
+                               asp-controller="Account" asp-action="Login">Giriş Yap</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="btn btn-sm btn-light"
+                               asp-controller="Account" asp-action="Register">Kayıt Ol</a>
                         </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
+                    }
+                </ul>
+
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container mt-4">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - AkilliYemekTarifOneriSistemi - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
+    <!-- FOOTER -->
+    <footer class="text-center">
+        © 2025 Akıllı Yemek Tarif Sistemi
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

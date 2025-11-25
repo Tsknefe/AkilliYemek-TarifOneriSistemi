@@ -1,0 +1,69 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+
+<h2 class="mb-4">✏️ Tarif Düzenle</h2>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ImagePath" />
+
+    <!-- ⭐ Mevcut Görsel Önizleme -->
+    <div class="mb-3 text-center">
+        <label class="form-label fw-bold">Mevcut Tarif Görseli</label>
+        <br />
+
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <img src="@Model.ImagePath" class="edit-preview-img" />
+        }
+        else
+        {
+            <img src="~/images/no-image.png" class="edit-preview-img" />
+        }
+    </div>
+
+    <!-- ⭐ Yeni Görsel Yükleme -->
+    <div class="mb-4">
+        <label class="form-label fw-bold">Yeni Görsel Seç (İsteğe Bağlı)</label>
+        <input type="file" name="newImage" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Tarif Adı</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Açıklama</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Pişirme Süresi</label>
+        <input asp-for="CookingTime" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Servis Sayısı</label>
+        <input asp-for="Servings" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Diyet Tipi</label>
+        <input asp-for="DietType" class="form-control" />
+    </div>
+
+    <button class="btn btn-warning">Güncelle</button>
+    <a href="/Recipes" class="btn btn-secondary">Geri</a>
+</form>
+
+<style>
+    .edit-preview-img {
+        width: 280px;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        margin-bottom: 10px;
+    }
+</style>
