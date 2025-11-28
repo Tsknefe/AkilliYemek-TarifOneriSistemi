@@ -3,11 +3,12 @@ using System.Collections.Generic;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Helpers
 {
+    // malzeme miktarlarını gram cinsine çevirmek için yazdığımız yardımcı sınıf
+    // besin değerleri hesaplanırken her malzemenin gram değeri gerektiği için bu dönüşümü burada yapıyoruz
     public static class UnitConverter
     {
-        // ---------------------------------------------
-        // YOĞUNLUK TABLOSU (ml → gram dönüşümü için)
-        // ---------------------------------------------
+        // sıvıların ml → gram dönüşümü için yoğunluk tablosu
+        // her sıvının yoğunluğu farklı olduğu için su gibi 1:1 değildir
         private static readonly Dictionary<string, double> DensityTable = new()
         {
             { "su", 1.0 },
@@ -20,9 +21,8 @@ namespace AkilliYemekTarifOneriSistemi.Services.Helpers
             { "şeker", 0.85 }
         };
 
-        // ---------------------------------------------
-        // ADET → GRAM DÖNÜŞTÜRME TABLOSU
-        // ---------------------------------------------
+        // adet ile ölçülen malzemelerin ortalama gram karşılıkları
+        // tariflerde “1 adet yumurta” gibi kullanım çok olduğu için böyle bir tablo gerekli
         private static readonly Dictionary<string, double> PieceWeights = new()
         {
             { "yumurta", 55 },
@@ -35,9 +35,10 @@ namespace AkilliYemekTarifOneriSistemi.Services.Helpers
             { "muz", 120 }
         };
 
-        // ---------------------------------------------
-        // ANA DÖNÜŞÜM METODU
-        // ---------------------------------------------
+        // burada tüm dönüşümleri tek bir merkezden yönetiyoruz
+        // quantity → miktar
+        // unit → birim (örneğin g, kg, ml, su bardağı…)
+        // ingredientName → malzeme adı (yoğunluk ve adet dönüşümü için lazım)
         public static double ToGram(double quantity, string unit, string ingredientName)
         {
             if (quantity <= 0)
@@ -46,42 +47,30 @@ namespace AkilliYemekTarifOneriSistemi.Services.Helpers
             unit = unit.ToLower().Trim();
             ingredientName = ingredientName.ToLower().Trim();
 
-            // -----------------------------
-            // 1) GRAM
-            // -----------------------------
+            // gram zaten gram ise direk döndürüyoruz
             if (unit is "g" or "gram" or "gr")
                 return quantity;
 
-            // -----------------------------
-            // 2) KG → GRAM
-            // -----------------------------
+            // kilo → gram
             if (unit is "kg" or "kilogram" or "kilo")
                 return quantity * 1000;
 
-            // -----------------------------
-            // 3) ML (Doğrudan Yoğunluk Tabanlı)
-            // -----------------------------
+            // ml → yoğunluğa göre gram
             if (unit == "ml")
                 return ConvertLiquidToGrams(quantity, ingredientName);
 
-            // -----------------------------
-            // 4) LİTRE
-            // -----------------------------
+            // litre → ml → gram
             if (unit is "l" or "litre")
                 return ConvertLiquidToGrams(quantity * 1000, ingredientName);
 
-            // -----------------------------
-            // 5) BARDAK DÖNÜŞÜMLERİ
-            // -----------------------------
+            // bardak ölçüleri
             if (unit.Contains("su bardağı"))
                 return ConvertLiquidToGrams(quantity * 200, ingredientName);
 
             if (unit.Contains("çay bardağı"))
                 return ConvertLiquidToGrams(quantity * 125, ingredientName);
 
-            // -----------------------------
-            // 6) KAŞIK DÖNÜŞÜMLERİ
-            // -----------------------------
+            // yemek kaşığı, tatlı kaşığı, çay kaşığı
             if (unit.Contains("yemek kaşığı"))
                 return ConvertLiquidToGrams(quantity * 15, ingredientName);
 
@@ -91,18 +80,16 @@ namespace AkilliYemekTarifOneriSistemi.Services.Helpers
             if (unit.Contains("çay kaşığı"))
                 return ConvertLiquidToGrams(quantity * 5, ingredientName);
 
-            // -----------------------------
-            // 7) ADET
-            // -----------------------------
+            // adet → gram
             if (unit == "adet")
                 return EstimatePieceWeight(ingredientName) * quantity;
 
             return 0;
         }
 
-        // ---------------------------------------------
-        // YOĞUNLUK İLE ML → GRAM DÖNÜŞÜMÜ
-        // ---------------------------------------------
+        // sıvılar için ağırlık dönüşümü
+        // burada malzemenin hangi tür sıvı olduğunu density table dan anlamaya çalışıyoruz
+        // bulamazsak su kabul edip 1.0 yoğunlukla hesaplıyoruz
         private static double ConvertLiquidToGrams(double ml, string ingredientName)
         {
             foreach (var kv in DensityTable)
@@ -111,13 +98,10 @@ namespace AkilliYemekTarifOneriSistemi.Services.Helpers
                     return ml * kv.Value;
             }
 
-            // eşleşme yoksa SU kabul edilir
             return ml * 1.0;
         }
 
-        // ---------------------------------------------
-        // ADET → GRAM
-        // ---------------------------------------------
+        // adet ile ölçülen malzemeler için ortalama gram dönüşümü
         private static double EstimatePieceWeight(string ingredientName)
         {
             foreach (var kv in PieceWeights)
@@ -126,7 +110,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Helpers
                     return kv.Value;
             }
 
-            return 100; // varsayılan
+            return 100;
         }
     }
 }

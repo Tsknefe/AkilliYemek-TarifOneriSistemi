@@ -5,38 +5,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    //Burada normal CRUD işlemlerini tanımladığımız yer
+    // burada tarifler için tam kapsamlı CRUD işlemlerini yapan MVC controller var
+    // yani admin panel tarafındaki “tarif ekleme - düzenleme - silme - listeleme” işlemleri buradan yönetiliyor
+    // api controller ile karıştırılmamalı çünkü bu taraf sadece razor view döndürüyor
     public class RecipesController : Controller
     {
         private readonly ApplicationDbContext _context;
-
 
         public RecipesController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        //Get:/recipes
+        // INDEX (Liste)
+        // tarifleri listeliyoruz, eğer search dolu ise filtre uyguluyoruz
         public async Task<IActionResult> Index(string search)
         {
             var query = _context.Recipes.AsQueryable();
 
+            // arama özelliği
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(e =>
                     e.Name.Contains(search) ||
                     e.Description.Contains(search) ||
                     e.DietType.Contains(search)
-
-                    );
+                );
             }
-            var recipes=await query.AsNoTracking().ToListAsync();
-            ViewBag.Search=search;
-            return View(recipes);
 
+            var recipes = await query.AsNoTracking().ToListAsync();
+
+            // view tarafında textbox içinde arama terimini gösterebilmek için
+            ViewBag.Search = search;
+
+            return View(recipes);
         }
 
-        //Get:/recipes/details/5
+        // DETAILS
+        // tarifin tüm detaylarını getiriyoruz
+        // besin değerleri, malzemeleri ve malzemelerin Ingredient navigationları dahil
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -54,43 +61,42 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(recipe);
         }
 
-
-
-        //get:/recipes/create
+        // CREATE GET
+        // formu göstermek için
         public IActionResult Create()
         {
             return View();
         }
 
-        //Post:/recipes/create
+        // CREATE POST
+        // yeni tarif oluşturma işlemi burada yapılıyor
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-     [Bind("Name,Description,CookingTime,Servings,DietType")] Recipe recipe)
+            [Bind("Name,Description,CookingTime,Servings,DietType,Instructions")]
+            Recipe recipe)
         {
             Console.WriteLine(">>> CREATE POST METODU ÇALIŞTI");
 
+            // validasyon kontrolü
             if (!ModelState.IsValid)
             {
                 Console.WriteLine(">>> MODELSTATE INVALID (Geçersiz)");
 
-                // Hangi alanlar hatalı?
                 foreach (var err in ModelState)
                 {
                     if (err.Value.Errors.Count > 0)
-                    {
                         Console.WriteLine($"Hata: {err.Key} => {err.Value.Errors[0].ErrorMessage}");
-                    }
                 }
 
                 return View(recipe);
             }
 
             Console.WriteLine(">>> MODELSTATE VALID (Geçerli)");
-            Console.WriteLine(">>> VERİTABANINA KAYDEDİYOR...");
 
             try
             {
+                // veritabanına ekleme
                 _context.Add(recipe);
                 await _context.SaveChangesAsync();
                 Console.WriteLine(">>> KAYIT BAŞARILI 🔥🔥🔥");
@@ -103,14 +109,17 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-        //Get:/recipes/edit/5
+        // EDIT GET
+        // tarif düzenleme formunu malzemeleriyle birlikte getiriyoruz
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
                 return NotFound();
 
-            var recipe = await _context.Recipes.FindAsync(id);
+            var recipe = await _context.Recipes
+                .Include(r => r.RecipeIngredients)
+                    .ThenInclude(ri => ri.Ingredient)
+                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (recipe == null)
                 return NotFound();
@@ -118,12 +127,13 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(recipe);
         }
 
-        //Post:/recipes/edit/5
+        // EDIT POST
+        // tarif bilgilerini güncellediğimiz yer
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
             int id,
-            [Bind("Id,Name,Description,CookingTime,Servings,DietType")]
+            [Bind("Id,Name,Description,CookingTime,Servings,DietType,Instructions")]
             Recipe recipe)
         {
             if (id != recipe.Id)
@@ -144,10 +154,12 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 else
                     throw;
             }
+
             return RedirectToAction(nameof(Index));
         }
 
-        //Get:/recipes/Delete/5
+        // DELETE GET
+        // silme ekranını göstermek için
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -163,7 +175,8 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(recipe);
         }
 
-        //Post:/recipes/Delete/5
+        // DELETE POST
+        // gerçekten silme işlemi burada yapılıyor
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -175,13 +188,15 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 _context.Recipes.Remove(recipe);
                 await _context.SaveChangesAsync();
             }
+
             return RedirectToAction(nameof(Index));
         }
 
+        // helper fonksiyon
+        // tarif veritabanında var mı diye kontrol ediyor
         private bool RecipeExists(int id)
         {
             return _context.Recipes.Any(r => r.Id == id);
         }
-
     }
 }

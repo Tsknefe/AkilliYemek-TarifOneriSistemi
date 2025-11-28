@@ -5,8 +5,12 @@ using AkilliYemekTarifOneriSistemi.Models;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
+    // bu controller mvc tarafında malzeme CRUD işlemlerini yönettiğimiz yer
+    // admin panel gibi düşün buradan malzeme ekleme silme güncelleme yapıyoruz
+    // api ile karıştırmamak lazım bu razor view dönen klasik mvc controller
     public class IngredientsController : Controller
     {
+        // veritabanı context
         private readonly ApplicationDbContext _context;
 
         public IngredientsController(ApplicationDbContext context)
@@ -14,37 +18,34 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             _context = context;
         }
 
-        // ----------------------------------------------------
-        // LIST
-        // ----------------------------------------------------
+        // liste sayfası
+        // tüm malzemeleri çekip Index viewına gönderiyoruz
         public async Task<IActionResult> Index()
         {
             var list = await _context.Ingredients.ToListAsync();
             return View(list);
         }
 
-        // ----------------------------------------------------
-        // CREATE (GET)
-        // ----------------------------------------------------
+        // yeni malzeme ekleme formunu gösteren get action
         public IActionResult Create()
         {
             return View();
         }
 
-        // ----------------------------------------------------
-        // CREATE (POST)
-        // ----------------------------------------------------
+        // create post kısmı form submit edilince buraya düşüyor
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Ingredient ingredient)
         {
-            // 🟢 Güvenli tarafta olmak için formdan kendimiz çekiyoruz
+            // englishname için formdan manuel çekiyoruz
+            // bazı durumlarda modelbinding kaçırabiliyor o yüzden garantiye alıyoruz
             var englishNameFromForm = Request.Form["EnglishName"].ToString();
             if (!string.IsNullOrWhiteSpace(englishNameFromForm))
             {
                 ingredient.EnglishName = englishNameFromForm;
             }
 
+            // model valid ise veritabanına kaydediyoruz
             if (ModelState.IsValid)
             {
                 _context.Ingredients.Add(ingredient);
@@ -52,12 +53,12 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // hata varsa aynı formu bu sefer validasyon mesajlarıyla geri gösteriyoruz
             return View(ingredient);
         }
 
-        // ----------------------------------------------------
-        // EDIT (GET)
-        // ----------------------------------------------------
+        // düzenleme sayfasının get kısmı
+        // id ye göre malzemeyi bulup edit viewına gönderiyoruz
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -70,17 +71,16 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(ingredient);
         }
 
-        // ----------------------------------------------------
-        // EDIT (POST)
-        // ----------------------------------------------------
+        // edit post kısmı form kaydedilince buraya geliyor
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Ingredient ingredient)
         {
+            // url deki id ile modeldeki id aynı olmalı
             if (id != ingredient.Id)
                 return NotFound();
 
-            // Yine garantiye alalım
+            // yine englishname i formdan ayrıca çekiyoruz
             var englishNameFromForm = Request.Form["EnglishName"].ToString();
             if (!string.IsNullOrWhiteSpace(englishNameFromForm))
             {
@@ -96,6 +96,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
+                    // bu esnada kayıt silinmiş olabilir o yüzden existence kontrolü yapıyoruz
                     if (!_context.Ingredients.Any(e => e.Id == id))
                         return NotFound();
                     else
@@ -105,12 +106,12 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // validasyon patlarsa formu tekrar gösteriyoruz
             return View(ingredient);
         }
 
-        // ----------------------------------------------------
-        // DELETE (GET)
-        // ----------------------------------------------------
+        // silme onay sayfasının get kısmı
+        // önce kullanıcıya emin misin diye gösteriyoruz
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -125,9 +126,8 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(ingredient);
         }
 
-        // ----------------------------------------------------
-        // DELETE (POST)
-        // ----------------------------------------------------
+        // silme işleminin post kısmı
+        // gerçekten silme burada yapılıyor
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -140,6 +140,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // silindikten sonra tekrar listeye dönüyoruz
             return RedirectToAction(nameof(Index));
         }
     }

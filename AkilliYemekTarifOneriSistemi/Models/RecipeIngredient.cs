@@ -13,7 +13,7 @@
         public Ingredient? Ingredient { get; set; }
 
         // Kullanıcının yazdığı miktar
-        public double Quantity { get; set; }
+        public string Quantity { get; set; }
 
         // Kullanıcı birimi (kg, g, adet, yemek kaşığı...)
         public string Unit { get; set; } = string.Empty;

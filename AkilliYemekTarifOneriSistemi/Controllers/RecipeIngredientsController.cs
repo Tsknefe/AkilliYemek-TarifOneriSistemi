@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
+    // bu controller tariflere ait malzeme yönetimini razor tarafında yaptığımız yer
+    // yani admin panelde "tarife malzeme ekleme - düzenleme - silme" işlemlerinin mvc versiyonu
+    // api tarafındaki RecipeIngredientApiController ile karıştırmamak lazım
     public class RecipeIngredientsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,31 +21,31 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             _nutritionService = nutritionService;
         }
 
-        // --------------------------------------------------
-        // ADD (GET)
-        // --------------------------------------------------
+        // ADD GET
+        // bu action bir tarife malzeme ekleme formunu göstermek için kullanılıyor
         public async Task<IActionResult> Add(int id)
         {
             var recipe = await _context.Recipes.FindAsync(id);
             if (recipe == null)
                 return NotFound();
 
+            // view tarafında dropdown oluşturabilmek için malzemeleri çekiyoruz
             ViewBag.RecipeId = id;
             ViewBag.Ingredients = await _context.Ingredients.ToListAsync();
 
             return View();
         }
 
-        // --------------------------------------------------
-        // ADD (POST)
-        // --------------------------------------------------
+        // ADD POST
+        // form submit edildikten sonra gerçekten malzeme ekleyen kısım
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(int id, int ingredientId, double quantity, string unit)
         {
+            // form validation
             if (ingredientId == 0 || quantity <= 0 || string.IsNullOrWhiteSpace(unit))
             {
-                ModelState.AddModelError("", "Lütfen tüm alanları doldurun.");
+                ModelState.AddModelError("", "Lütfen tüm alanları doldurun");
                 ViewBag.RecipeId = id;
                 ViewBag.Ingredients = await _context.Ingredients.ToListAsync();
                 return View();
@@ -52,13 +55,15 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             if (ingredient == null)
                 return NotFound();
 
+            // gram dönüşümü için helper kullanıyoruz
             double grams = UnitConverter.ToGram(quantity, unit, ingredient.Name);
 
+            // yeni tarif-malzeme ilişkisi oluşturuyoruz
             var ri = new RecipeIngredient
             {
                 RecipeId = id,
                 IngredientId = ingredientId,
-                Quantity = quantity,
+                Quantity = quantity.ToString(),
                 Unit = unit,
                 CalculatedGrams = grams
             };
@@ -66,14 +71,14 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             _context.RecipeIngredients.Add(ri);
             await _context.SaveChangesAsync();
 
+            // malzeme değiştiğinde besin hesabını güncelliyoruz
             await _nutritionService.SaveNutritionForRecipeAsync(id);
 
             return RedirectToAction("Details", "Recipes", new { id });
         }
 
-        // --------------------------------------------------
-        // EDIT (GET)
-        // --------------------------------------------------
+        // EDIT GET
+        // bir tarifteki mevcut bir malzeme satırını düzenleme formuna getiriyoruz
         public async Task<IActionResult> Edit(int id)
         {
             var ri = await _context.RecipeIngredients
@@ -83,15 +88,14 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             if (ri == null)
                 return NotFound();
 
-            // 🔥 Eksik olan kısım buydu!
+            // eksik olan kısım burasıydı dropdown için tüm malzemeleri gönderiyoruz
             ViewBag.Ingredients = await _context.Ingredients.ToListAsync();
 
             return View(ri);
         }
 
-        // --------------------------------------------------
-        // EDIT (POST)
-        // --------------------------------------------------
+        // EDIT POST
+        // düzenleme formu kaydedilince burası çalışıyor
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, double quantity, string unit, int ingredientId)
@@ -107,23 +111,25 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             if (ingredient == null)
                 return NotFound();
 
+            // gram hesaplamayı tekrar yapıyoruz
             double grams = UnitConverter.ToGram(quantity, unit, ingredient.Name);
 
+            // alanları güncelliyoruz
             ri.IngredientId = ingredientId;
-            ri.Quantity = quantity;
+            ri.Quantity = quantity.ToString();
             ri.Unit = unit;
             ri.CalculatedGrams = grams;
 
             await _context.SaveChangesAsync();
 
+            // besin değerini güncelle
             await _nutritionService.SaveNutritionForRecipeAsync(ri.RecipeId);
 
             return RedirectToAction("Details", "Recipes", new { id = ri.RecipeId });
         }
 
-        // --------------------------------------------------
-        // DELETE (GET)
-        // --------------------------------------------------
+        // DELETE GET
+        // kullanıcıya "malzemeyi silmek istiyor musun" ekranını gösteriyoruz
         public async Task<IActionResult> Delete(int id)
         {
             var ri = await _context.RecipeIngredients
@@ -136,9 +142,8 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(ri);
         }
 
-        // --------------------------------------------------
-        // DELETE (POST)
-        // --------------------------------------------------
+        // DELETE POST
+        // silme işlemi burada yapılır
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -149,9 +154,11 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
 
             int recipeId = ri.RecipeId;
 
+            // ilişkili malzeme kaydını siliyoruz
             _context.RecipeIngredients.Remove(ri);
             await _context.SaveChangesAsync();
 
+            // besin değerini tekrar güncelle
             await _nutritionService.SaveNutritionForRecipeAsync(recipeId);
 
             return RedirectToAction("Details", "Recipes", new { id = recipeId });

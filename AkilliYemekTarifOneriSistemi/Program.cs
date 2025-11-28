@@ -4,6 +4,8 @@ using AkilliYemekTarifOneriSistemi.Services.Implementations;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+
 
 
 namespace AkilliYemekTarifOneriSistemi
@@ -23,15 +25,37 @@ namespace AkilliYemekTarifOneriSistemi
             builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddRoles<IdentityRole>() //Burada false yapmamýzýn nedeni admin/user kontrolü için 
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-            builder.Services.AddControllersWithViews();
 
+            builder.Services.AddControllers()
+                .AddJsonOptions(o =>
+                {
+                    o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                    o.JsonSerializerOptions.WriteIndented = true;
+                });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("ReactDevClient", policy =>
+                {
+                    policy
+                        .WithOrigins("http://localhost:5173") 
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
 
             builder.Services.AddScoped<INutritionService, NutritionService>();
             builder.Services.AddScoped<IIngredientService, IngredientService>();
             builder.Services.AddScoped<IRecipeService, RecipeService>();
-
+            builder.Services.AddScoped<IRecipeIngredientService, RecipeIngredientService>();
+            builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+            builder.Services.AddScoped<IHealthProfileService, HealthProfileService>();
+            builder.Services.AddScoped<IAllergyService, AllergyService>();
+            builder.Services.AddScoped<IWeeklyPlanService, WeeklyPlanService>();
 
             var app = builder.Build();
 
@@ -50,9 +74,14 @@ namespace AkilliYemekTarifOneriSistemi
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseCors("ReactDevClient");
+
             app.MapStaticAssets();
+            app.MapControllers();
+
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}")
