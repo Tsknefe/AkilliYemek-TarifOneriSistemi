@@ -1,49 +1,83 @@
-## 🟦 Backend – Yapılanlar
+# 🍽️ Akıllı Yemek ve Tarif Öneri Sistemi  
 
-### ✔ Backend Proje Altyapısı
-- ASP.NET Core MVC backend çatısı kuruldu.
-- Entity Framework Core eklendi ve yapılandırıldı.
-- Identity sistemi kuruldu (register, login, roller hazır).
+**ASP.NET Core MVC + Entity Framework Core + SQL Server** kullanılarak geliştirilmiş akıllı yemek tarifi öneri ve haftalık menü planlama uygulaması.
 
-### ✔ Domain Modelleri Oluşturuldu
-Aşağıdaki backend modelleri yazıldı:
-- `Recipe`
-- `Ingredient`
-- `RecipeIngredient`
-- `NutritionFacts`
-
-### ✔ Veritabanı İlişkileri Kuruldu
-- Recipe – RecipeIngredient → **1 – N**
-- Ingredient – RecipeIngredient → **1 – N**
-- Recipe – NutritionFacts → **1 – 1**
-
-### ✔ DbContext Tamamen Hazır
-- Fluent API ile tüm ilişkiler kuruldu.
-- DbSet’ler eklendi.
-- Cascade davranışları tanımlandı.
-
-### ✔ Migration ve Veritabanı Oluşturma
-- `InitialCreate` migration hazırlandı.
-- `dotnet ef database update` ile **tüm tablolar** oluşturuldu.
-
-### ✔ Recipe CRUD Backend Tamamlandı
-- Tarif ekleme / düzenleme / silme / listeleme backend tarafında çalışıyor.
-- Validation kuralları eklendi.
-- Arama (Search) backend mantığı yazıldı.
+Sistem, kullanıcıların evdeki malzemelerine, diyet tercihlerine, kalori ihtiyaçlarına ve tarif hazırlama sürelerine göre akıllı öneriler sunar.  
+Ayrıca haftalık yemek planı oluşturabilir, favori tarifleri yönetebilir ve alışveriş listesi üretebilir.
 
 ---
 
-## 🟧 Frontend – Yapılanlar
+# 📌 Özellikler
 
-### ✔ MVC View Altyapısı Hazır
-- Razor View sistemi aktif hale getirildi.
-- Layout (navbar–footer) temel yapı oluşturuldu.
+### ✔ Kullanıcı Yönetimi
+- Kayıt / Giriş / Çıkış
+- Role-based Authorization (Admin – User)
+- Identity tabanlı oturum yönetimi
 
-### ✔ Backend Testi İçin Scaffold View’lar Üretildi
-- Recipe CRUD test sayfaları scaffold edildi.
-- Backend fonksiyonlarının çalıştığı doğrulandı.
+### ✔ Tarif Yönetimi (CRUD)
+- Tarif ekleme / düzenleme / silme / görüntüleme
+- Tarife malzeme ekleme (RecipeIngredient)
+- Tarif arama & filtreleme
 
-### ✔ Bootstrap Entegre
-- Responsiveness sağlandı (frontend gelişimine hazır hale getirildi).
+### ✔ Malzeme Yönetimi (CRUD)
+- Ingredient ekleme, düzenleme, silme
+- Miktar & birim yönetimi
+
+### ✔ Besin Değeri Analizi
+- OpenFoodFacts API entegrasyonu
+- Kalori, protein, yağ, karbonhidrat, şeker, lif, sodyum değeri hesaplama
+- NutritionFacts tablosuna otomatik kayıt
+
+### ✔ Akıllı Tarif Öneri Motoru
+- Kullanıcının evdeki malzemelerine göre öneri
+- Diyet tipi uyumu
+- Kalori uyumu
+- Süre uyumu
+- Toplam “recommendation score” algoritması
+
+### ✔ Haftalık Yemek Planı
+- 7 gün × 3 öğün planlama
+- Tarif tekrarını azaltan algoritma
+- Kalori ve diyet tipi hedeflerine göre plan oluşturma
+
+### ✔ Favoriler & Alışveriş Listesi
+- User – Recipe arasında **N-N** ilişki
+- Haftalık plan → Alışveriş listesi üretme
+- Birim dönüştürme (ör. 500g + 0.5kg = 1kg birleştirme)
+- CSV export
+
+### ✔ Raporlama
+- QuestPDF ile haftalık plan PDF çıktısı
+- Alışveriş listesini CSV olarak indirme
 
 ---
+
+# 🧱 Proje Mimari Yapısı
+
+```text
+AkilliYemekTarifOneriSistemi/
+│
+├── Models/
+│   ├── Recipe.cs
+│   ├── Ingredient.cs
+│   ├── RecipeIngredient.cs
+│   └── NutritionFacts.cs
+│
+├── Data/
+│   └── ApplicationDbContext.cs
+│
+├── Services/
+│   ├── Interfaces/
+│   │   ├── IRecipeService.cs
+│   │   ├── IIngredientService.cs
+│   │   ├── INutritionService.cs
+│   │   └── IWeeklyPlanService.cs
+│   └── Implementations/
+│       ├── RecipeService.cs
+│       ├── IngredientService.cs
+│       ├── NutritionService.cs
+│       └── WeeklyPlanService.cs
+│
+├── Controllers/
+├── Views/
+└── Migrations/

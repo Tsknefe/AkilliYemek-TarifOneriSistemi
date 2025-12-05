@@ -148,8 +148,8 @@ namespace AkilliYemekTarifOneriSistemi.Controllers.Api
         public int RecipeId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public int CookingTime { get; set; }
-        public int Servings { get; set; }
+        public int? CookingTime { get; set; }
+        public int? Servings { get; set; }
         public string DietType { get; set; } = string.Empty;
 
         // öneri skoru ve alt skorlar

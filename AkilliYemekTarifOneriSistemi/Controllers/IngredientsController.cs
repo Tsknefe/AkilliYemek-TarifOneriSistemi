@@ -1,64 +1,109 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    // bu controller mvc tarafında malzeme CRUD işlemlerini yönettiğimiz yer
-    // admin panel gibi düşün buradan malzeme ekleme silme güncelleme yapıyoruz
-    // api ile karıştırmamak lazım bu razor view dönen klasik mvc controller
+    /// <summary>
+    /// Malzeme (Ingredient) CRUD işlemlerini yöneten MVC controller.
+    /// Burası admin paneli gibi düşünülebilir; Razor View döner, API değildir.
+    /// Melisa'nın sorumluluğu: Ingredient CRUD ekranları.
+    /// </summary>
     public class IngredientsController : Controller
     {
-        // veritabanı context
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<IngredientsController> _logger;
 
-        public IngredientsController(ApplicationDbContext context)
+        public IngredientsController(ApplicationDbContext context, ILogger<IngredientsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
-        // liste sayfası
-        // tüm malzemeleri çekip Index viewına gönderiyoruz
+        /// <summary>
+        /// Tüm malzemeleri listeleyen sayfa.
+        /// GET: /Ingredients veya /Ingredients/Index
+        /// </summary>
         public async Task<IActionResult> Index()
         {
-            var list = await _context.Ingredients.ToListAsync();
-            return View(list);
+            // Tüm malzemeleri ada göre sıralı çekiyoruz
+            var ingredients = await _context.Ingredients
+                .OrderBy(i => i.Name)
+                .ToListAsync();
+
+            return View(ingredients);
         }
 
-        // yeni malzeme ekleme formunu gösteren get action
+        /// <summary>
+        /// Belirli bir malzemenin detay sayfasını gösterir.
+        /// GET: /Ingredients/Details/5
+        /// </summary>
+        /// <param name="id">Malzemenin Id değeri</param>
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            // Malzemenin kullanıldığı tarifleri de dahil ederek getiriyoruz
+            var ingredient = await _context.Ingredients
+                .Include(i => i.RecipeIngredients)
+                    .ThenInclude(ri => ri.Recipe)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (ingredient == null)
+            {
+                return NotFound();
+            }
+
+            return View(ingredient);
+        }
+
+        /// <summary>
+        /// Yeni malzeme ekleme formunu gösterir.
+        /// GET: /Ingredients/Create
+        /// </summary>
         public IActionResult Create()
         {
             return View();
         }
 
-        // create post kısmı form submit edilince buraya düşüyor
+        /// <summary>
+        /// Yeni malzeme ekleme işlemini gerçekleştirir.
+        /// POST: /Ingredients/Create
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Ingredient ingredient)
         {
-            // englishname için formdan manuel çekiyoruz
-            // bazı durumlarda modelbinding kaçırabiliyor o yüzden garantiye alıyoruz
+            // EnglishName için formdan manuel çekiyoruz.
+            // Bazı durumlarda model binding kaçırabiliyor, garantiye alıyoruz.
             var englishNameFromForm = Request.Form["EnglishName"].ToString();
             if (!string.IsNullOrWhiteSpace(englishNameFromForm))
             {
                 ingredient.EnglishName = englishNameFromForm;
             }
 
-            // model valid ise veritabanına kaydediyoruz
             if (ModelState.IsValid)
             {
                 _context.Ingredients.Add(ingredient);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Malzeme başarıyla eklendi!";
                 return RedirectToAction(nameof(Index));
             }
 
-            // hata varsa aynı formu bu sefer validasyon mesajlarıyla geri gösteriyoruz
+            // Validasyon hatası varsa formu aynı model ile geri gösteriyoruz
             return View(ingredient);
         }
 
-        // düzenleme sayfasının get kısmı
-        // id ye göre malzemeyi bulup edit viewına gönderiyoruz
+        /// <summary>
+        /// Malzeme düzenleme formunu gösterir.
+        /// GET: /Ingredients/Edit/5
+        /// </summary>
+        /// <param name="id">Malzemenin Id değeri</param>
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -71,16 +116,19 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(ingredient);
         }
 
-        // edit post kısmı form kaydedilince buraya geliyor
+        /// <summary>
+        /// Malzeme düzenleme işlemini gerçekleştirir.
+        /// POST: /Ingredients/Edit/5
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Ingredient ingredient)
         {
-            // url deki id ile modeldeki id aynı olmalı
+            // URL'deki id ile modeldeki id aynı olmalı
             if (id != ingredient.Id)
                 return NotFound();
 
-            // yine englishname i formdan ayrıca çekiyoruz
+            // EnglishName için yine formdan manuel çekiyoruz
             var englishNameFromForm = Request.Form["EnglishName"].ToString();
             if (!string.IsNullOrWhiteSpace(englishNameFromForm))
             {
@@ -93,32 +141,42 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 {
                     _context.Update(ingredient);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Malzeme başarıyla güncellendi!";
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    // bu esnada kayıt silinmiş olabilir o yüzden existence kontrolü yapıyoruz
-                    if (!_context.Ingredients.Any(e => e.Id == id))
+                    if (!IngredientExists(ingredient.Id))
+                    {
                         return NotFound();
+                    }
                     else
+                    {
+                        _logger.LogError(ex, "Ingredient güncellenirken concurrency hatası oluştu. Id={Id}", ingredient.Id);
                         throw;
+                    }
                 }
 
                 return RedirectToAction(nameof(Index));
             }
 
-            // validasyon patlarsa formu tekrar gösteriyoruz
+            // Validasyon patlarsa formu tekrar gösteriyoruz
             return View(ingredient);
         }
 
-        // silme onay sayfasının get kısmı
-        // önce kullanıcıya emin misin diye gösteriyoruz
+        /// <summary>
+        /// Malzeme silme onay sayfasını gösterir.
+        /// GET: /Ingredients/Delete/5
+        /// </summary>
+        /// <param name="id">Malzemenin Id değeri</param>
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
                 return NotFound();
 
             var ingredient = await _context.Ingredients
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(i => i.RecipeIngredients)
+                    .ThenInclude(ri => ri.Recipe)
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (ingredient == null)
                 return NotFound();
@@ -126,8 +184,10 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(ingredient);
         }
 
-        // silme işleminin post kısmı
-        // gerçekten silme burada yapılıyor
+        /// <summary>
+        /// Malzeme silme işlemini gerçekleştirir.
+        /// POST: /Ingredients/Delete/5
+        /// </summary>
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -136,12 +196,22 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
 
             if (ingredient != null)
             {
+                // Malzeme tariflerde kullanılıyorsa, ilişkiler cascade delete ile temizlenecek
                 _context.Ingredients.Remove(ingredient);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Malzeme başarıyla silindi!";
             }
 
-            // silindikten sonra tekrar listeye dönüyoruz
+            // Silindikten sonra tekrar listeye dönüyoruz
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Belirli bir Id'ye sahip malzemenin var olup olmadığını kontrol eder.
+        /// </summary>
+        private bool IngredientExists(int id)
+        {
+            return _context.Ingredients.Any(e => e.Id == id);
         }
     }
 }
