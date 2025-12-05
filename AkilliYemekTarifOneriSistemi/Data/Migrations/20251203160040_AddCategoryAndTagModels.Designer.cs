@@ -4,6 +4,7 @@ using AkilliYemekTarifOneriSistemi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AkilliYemekTarifOneriSistemi.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251203160040_AddCategoryAndTagModels")]
+    partial class AddCategoryAndTagModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,24 +43,6 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.FavoriteRecipe", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("UserId", "RecipeId");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("FavoriteRecipes");
                 });
 
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Ingredient", b =>
@@ -175,62 +160,6 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tags");
-                });
-
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("WeeklyPlans");
-                });
-
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlanItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MealType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WeeklyPlanId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RecipeId");
-
-                    b.HasIndex("WeeklyPlanId", "DayOfWeek", "MealType")
-                        .IsUnique();
-
-                    b.ToTable("WeeklyPlanItems");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -435,25 +364,6 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.FavoriteRecipe", b =>
-                {
-                    b.HasOne("AkilliYemekTarifOneriSistemi.Models.Recipe", "Recipe")
-                        .WithMany("FavoriteRecipes")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Recipe");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Recipe", b =>
                 {
                     b.HasOne("AkilliYemekTarifOneriSistemi.Models.Category", "Category")
@@ -499,36 +409,6 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.Navigation("Recipe");
 
                     b.Navigation("Tag");
-                });
-
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlan", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlanItem", b =>
-                {
-                    b.HasOne("AkilliYemekTarifOneriSistemi.Models.Recipe", "Recipe")
-                        .WithMany()
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AkilliYemekTarifOneriSistemi.Models.WeeklyPlan", "WeeklyPlan")
-                        .WithMany("Items")
-                        .HasForeignKey("WeeklyPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Recipe");
-
-                    b.Navigation("WeeklyPlan");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -594,8 +474,6 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
 
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Recipe", b =>
                 {
-                    b.Navigation("FavoriteRecipes");
-
                     b.Navigation("RecipeIngredients");
 
                     b.Navigation("RecipeTags");
@@ -604,11 +482,6 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Tag", b =>
                 {
                     b.Navigation("RecipeTags");
-                });
-
-            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlan", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }
