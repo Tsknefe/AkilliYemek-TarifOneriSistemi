@@ -1,0 +1,82 @@
+@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+
+@{
+    ViewData["Title"] = "Malzeme Sil";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Malzeme Sil</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">Dikkat!</h5>
+                        <p>Bu malzemeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Malzeme Adı:</dt>
+                        <dd class="col-sm-8"><strong>@Model.Name</strong></dd>
+
+                        <dt class="col-sm-4">Varsayılan Birim:</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Model.DefaultUnit))
+                            {
+                                <span class="badge bg-secondary">@Model.DefaultUnit</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Açıklama:</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                @Model.Description
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </dd>
+
+                        @if (Model.RecipeIngredients != null && Model.RecipeIngredients.Any())
+                        {
+                            <dt class="col-sm-4">Kullanıldığı Tarifler:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-warning text-dark">
+                                    @Model.RecipeIngredients.Count tarifte kullanılıyor
+                                </span>
+                                <br>
+                                <small class="text-muted">
+                                    Bu malzeme silindiğinde, bu tariflerden de otomatik olarak kaldırılacaktır.
+                                </small>
+                            </dd>
+                        }
+                    </dl>
+
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Index", "Ingredients")" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Evet, Sil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+

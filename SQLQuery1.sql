@@ -1,0 +1,30 @@
+﻿INSERT INTO dbo.AspNetUsers (
+    Id,
+    UserName,
+    NormalizedUserName,
+    Email,
+    NormalizedEmail,
+    EmailConfirmed,
+    PasswordHash,
+    SecurityStamp,
+    ConcurrencyStamp,
+    PhoneNumberConfirmed,
+    TwoFactorEnabled,
+    LockoutEnabled,
+    AccessFailedCount
+)
+VALUES (
+    NEWID(),
+    'gul1@gmail.com',
+    'GUL1@GMAIL.COM',
+    'gul1@gmail.com',
+    'GUL1@GMAIL.COM',
+    1,
+    'AQAAAAIAAYagAAAAEGkq4NlAH9fRF10iV4cE1wWlVzzZCtn0j3KSqgUjE2sYUTCt7Ehm2JHmW8WsBALgJQ==',
+    NEWID(),
+    NEWID(),
+    0,
+    0,
+    0,
+    0
+);

@@ -1,0 +1,159 @@
+@model AkilliYemekTarifOneriSistemi.Models.WeeklyPlan
+
+@{
+    ViewData["Title"] = Model.Title ?? "Haftalık Plan";
+    var daysOfWeek = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+    var dayNames = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Pazartesi" },
+        { DayOfWeek.Tuesday, "Salı" },
+        { DayOfWeek.Wednesday, "Çarşamba" },
+        { DayOfWeek.Thursday, "Perşembe" },
+        { DayOfWeek.Friday, "Cuma" },
+        { DayOfWeek.Saturday, "Cumartesi" },
+        { DayOfWeek.Sunday, "Pazar" }
+    };
+    var mealTypes = new[] { "Kahvaltı", "Öğle", "Akşam", "Ara Öğün" };
+    var recipes = ViewBag.Recipes as List<SelectListItem> ?? new List<SelectListItem>();
+}
+
+<div class="container mt-4">
+    <!-- Geri dön butonu -->
+    <div class="mb-3">
+        <a href="@Url.Action("Index", "WeeklyPlans")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Plan Listesine Dön
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Plan başlığı -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 class="card-title">
+                        @if (!string.IsNullOrEmpty(Model.Title))
+                        {
+                            @Model.Title
+                        }
+                        else
+                        {
+                            <text>Haftalık Plan</text>
+                        }
+                    </h2>
+                    <p class="card-text text-muted">
+                        <strong>Başlangıç:</strong> @Model.StartDate.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))<br>
+                        <strong>Bitiş:</strong> @Model.StartDate.AddDays(6).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                    </p>
+                </div>
+                <div>
+                    <a href="@Url.Action("ShoppingList", "WeeklyPlans", new { id = Model.Id })" class="btn btn-success">
+                        <i class="bi bi-cart"></i> Alışveriş Listesi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Haftalık plan tablosu -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">Gün</th>
+                            @foreach (var mealType in mealTypes)
+                            {
+                                <th>@mealType</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var day in daysOfWeek)
+                        {
+                            var dayDate = Model.StartDate.AddDays((int)day - (int)DayOfWeek.Monday);
+                            <tr>
+                                <td class="fw-bold">
+                                    @dayNames[day]<br>
+                                    <small class="text-muted">@dayDate.ToString("dd.MM")</small>
+                                </td>
+                                @foreach (var mealType in mealTypes)
+                                {
+                                    var item = Model.Items?.FirstOrDefault(i => i.DayOfWeek == day && i.MealType == mealType);
+                                    <td style="min-height: 100px; vertical-align: middle;">
+                                        @if (item != null)
+                                        {
+                                            <div class="card bg-light">
+                                                <div class="card-body p-2">
+                                                    <h6 class="card-title mb-1">@item.Recipe.Title</h6>
+                                                    @if (!string.IsNullOrEmpty(item.Recipe.ShortDescription))
+                                                    {
+                                                        <small class="text-muted d-block">@item.Recipe.ShortDescription</small>
+                                                    }
+                                                    <div class="mt-2">
+                                                        <a href="@Url.Action("Details", "Recipes", new { id = item.RecipeId })" 
+                                                           class="btn btn-sm btn-outline-primary" target="_blank">
+                                                            <i class="bi bi-eye"></i> Detay
+                                                        </a>
+                                                        <form asp-action="RemoveMeal" method="post" class="d-inline">
+                                                            <input type="hidden" name="itemId" value="@item.Id" />
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Kaldır">
+                                                                <i class="bi bi-x"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- Tarif ekleme formu -->
+                                            <form asp-action="AddMeal" method="post" class="meal-form">
+                                                <input type="hidden" name="weeklyPlanId" value="@Model.Id" />
+                                                <input type="hidden" name="dayOfWeek" value="@day" />
+                                                <input type="hidden" name="mealType" value="@mealType" />
+                                                @Html.AntiForgeryToken()
+                                                <select name="recipeId" class="form-select form-select-sm mb-2" required>
+                                                    <option value="">Tarif Seçin...</option>
+                                                    @foreach (var recipe in recipes)
+                                                    {
+                                                        <option value="@recipe.Value">@recipe.Text</option>
+                                                    }
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-success w-100">
+                                                    <i class="bi bi-plus"></i> Ekle
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<style>
+    .meal-form {
+        min-height: 80px;
+    }
+    table td {
+        vertical-align: middle;
+    }
+</style>
+
