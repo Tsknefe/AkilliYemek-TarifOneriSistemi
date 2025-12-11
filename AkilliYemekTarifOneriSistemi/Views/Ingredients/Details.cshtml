@@ -1,17 +1,119 @@
-﻿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+@model AkilliYemekTarifOneriSistemi.Models.Ingredient
 
 @{
-    ViewData["Title"] = "Malzeme Detayı";
+    ViewData["Title"] = Model.Name;
 }
 
-<h2 class="mb-4">📌 Malzeme Detayı</h2>
+<div class="container mt-4">
+    <!-- Geri dön butonu -->
+    <div class="mb-3">
+        <a href="@Url.Action("Index", "Ingredients")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Malzeme Listesine Dön
+        </a>
+    </div>
 
-<div class="card p-4 shadow-sm">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-info-circle"></i> Malzeme Detayları</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">ID:</dt>
+                        <dd class="col-sm-9">@Model.Id</dd>
 
-    <p><strong>ID:</strong> @Model.Id</p>
-    <p><strong>Türkçe Ad:</strong> @Model.Name</p>
-    <p><strong>İngilizce Ad (API):</strong> @Model.EnglishName</p>
+                        <dt class="col-sm-3">Malzeme Adı:</dt>
+                        <dd class="col-sm-9"><strong>@Model.Name</strong></dd>
 
-    <a href="/Ingredients/Edit/@Model.Id" class="btn btn-warning">Düzenle</a>
-    <a href="/Ingredients" class="btn btn-secondary">Geri</a>
+                        <dt class="col-sm-3">Varsayılan Birim:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.DefaultUnit))
+                            {
+                                <span class="badge bg-secondary">@Model.DefaultUnit</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Belirtilmemiş</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Açıklama:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                @Model.Description
+                            }
+                            else
+                            {
+                                <span class="text-muted">Açıklama eklenmemiş</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    <div class="mt-4">
+                        <a href="@Url.Action("Edit", "Ingredients", new { id = Model.Id })" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Düzenle
+                        </a>
+                        <a href="@Url.Action("Delete", "Ingredients", new { id = Model.Id })" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Bu malzemenin kullanıldığı tarifler -->
+            @if (Model.RecipeIngredients != null && Model.RecipeIngredients.Any())
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Kullanıldığı Tarifler</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Bu malzeme <strong>@Model.RecipeIngredients.Count</strong> tarifte kullanılıyor:</p>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var recipeIngredient in Model.RecipeIngredients.Take(10))
+                            {
+                                <li class="list-group-item">
+                                    <a href="@Url.Action("Details", "Recipes", new { id = recipeIngredient.RecipeId })" 
+                                       class="text-decoration-none">
+                                        @recipeIngredient.Recipe.Title
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">
+                                        @recipeIngredient.Amount 
+                                        @if (!string.IsNullOrEmpty(recipeIngredient.Unit))
+                                        {
+                                            @recipeIngredient.Unit
+                                        }
+                                    </small>
+                                </li>
+                            }
+                        </ul>
+                        @if (Model.RecipeIngredients.Count > 10)
+                        {
+                            <p class="text-muted mt-2">
+                                <small>... ve @(Model.RecipeIngredients.Count - 10) tarif daha</small>
+                            </p>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-body text-center text-muted">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <p class="mt-2">Bu malzeme henüz hiçbir tarifte kullanılmamış.</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+

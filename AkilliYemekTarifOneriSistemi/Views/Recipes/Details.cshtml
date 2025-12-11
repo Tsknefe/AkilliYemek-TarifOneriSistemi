@@ -1,118 +1,201 @@
-﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+@model AkilliYemekTarifOneriSistemi.Models.Recipe
 
 @{
-    ViewData["Title"] = "Tarif Detayı";
+    ViewData["Title"] = Model.Title;
 }
 
-<h2 class="mb-4">@Model.Name</h2>
+<div class="container mt-4">
+    <!-- Geri dön butonu -->
+    <div class="mb-3">
+        <a href="@Url.Action("Index", "Recipes")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Tarif Listesine Dön
+        </a>
+    </div>
 
-<div class="card p-4 shadow-sm">
+    <div class="row">
+        <!-- Sol taraf: Görsel ve temel bilgiler -->
+        <div class="col-md-5 mb-4">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="img-fluid rounded shadow" alt="@Model.Title">
+            }
+            else
+            {
+                <div class="bg-light rounded shadow d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="bi bi-image" style="font-size: 5rem; color: #ccc;"></i>
+                </div>
+            }
 
-    <p><strong>Açıklama:</strong> @Model.Description</p>
-    <p><strong>Pişirme Süresi:</strong> @Model.CookingTime dk</p>
-    <p><strong>Servis:</strong> @Model.Servings kişilik</p>
-    <p><strong>Diyet Tipi:</strong> @Model.DietType</p>
+            <!-- Temel bilgiler kartı -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Tarif Bilgileri</h5>
+                    <ul class="list-unstyled">
+                        @if (Model.Category != null)
+                        {
+                            <li class="mb-2">
+                                <strong>Kategori:</strong> 
+                                <span class="badge bg-primary">@Model.Category.Name</span>
+                            </li>
+                        }
+                        @if (Model.PreparationTimeMinutes.HasValue)
+                        {
+                            <li class="mb-2">
+                                <strong>Hazırlama Süresi:</strong> 
+                                <i class="bi bi-clock"></i> @Model.PreparationTimeMinutes dakika
+                            </li>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Difficulty))
+                        {
+                            <li class="mb-2">
+                                <strong>Zorluk:</strong> 
+                                <span class="badge bg-info">@Model.Difficulty</span>
+                            </li>
+                        }
+                    </ul>
 
-    <a href="/Recipes/Edit/@Model.Id" class="btn btn-warning">Düzenle</a>
-    <a href="/Recipes" class="btn btn-secondary">Geri</a>
+                    <!-- Etiketler -->
+                    @if (Model.RecipeTags != null && Model.RecipeTags.Any())
+                    {
+                        <div class="mt-3">
+                            <strong>Etiketler:</strong>
+                            <div class="mt-2">
+                                @foreach (var recipeTag in Model.RecipeTags)
+                                {
+                                    <span class="badge bg-secondary me-1">@recipeTag.Tag.Name</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ taraf: Detaylı bilgiler -->
+        <div class="col-md-7">
+            <!-- Başlık ve Favori Butonu -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h1 class="display-5">@Model.Title</h1>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (ViewBag.IsFavorite == true)
+                    {
+                        <form asp-action="RemoveFavorite" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-lg" title="Favorilerden Çıkar">
+                                <i class="bi bi-heart-fill"></i> Favorilerden Çıkar
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="AddFavorite" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-lg" title="Favorilere Ekle">
+                                <i class="bi bi-heart"></i> Favorilere Ekle
+                            </button>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <a href="/Identity/Account/Login" class="btn btn-outline-secondary btn-lg" title="Favorilere eklemek için giriş yapın">
+                        <i class="bi bi-heart"></i> Favorilere Ekle
+                    </a>
+                }
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    @TempData["InfoMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Kısa açıklama -->
+            @if (!string.IsNullOrEmpty(Model.ShortDescription))
+            {
+                <p class="lead text-muted mb-4">@Model.ShortDescription</p>
+            }
+
+            <!-- Malzemeler bölümü -->
+            @if (Model.RecipeIngredients != null && Model.RecipeIngredients.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-list-ul"></i> Malzemeler</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var ingredient in Model.RecipeIngredients)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@ingredient.Ingredient.Name</strong>
+                                        @if (!string.IsNullOrEmpty(ingredient.Note))
+                                        {
+                                            <small class="text-muted d-block">@ingredient.Note</small>
+                                        }
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">
+                                        @ingredient.Amount 
+                                        @if (!string.IsNullOrEmpty(ingredient.Unit))
+                                        {
+                                            @ingredient.Unit
+                                        }
+                                        else if (!string.IsNullOrEmpty(ingredient.Ingredient.DefaultUnit))
+                                        {
+                                            @ingredient.Ingredient.DefaultUnit
+                                        }
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <!-- Hazırlanış talimatları -->
+            @if (!string.IsNullOrEmpty(Model.Instructions))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0"><i class="bi bi-book"></i> Hazırlanış</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="instructions-text">
+                            @Html.Raw(Model.Instructions.Replace("\n", "<br />"))
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> Bu tarif için henüz hazırlanış talimatları eklenmemiş.
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
+<!-- Bootstrap Icons için CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-<!-- MALZEME LİSTESİ -->
-<h3 class="mt-4">🍅 Malzemeler</h3>
+<style>
+    .instructions-text {
+        line-height: 1.8;
+        white-space: pre-wrap;
+    }
+</style>
 
-<a class="btn btn-primary btn-sm mb-3" href="/RecipeIngredients/Add/@Model.Id">
-    ➕ Malzeme Ekle
-</a>
-
-@if (Model.RecipeIngredients == null || !Model.RecipeIngredients.Any())
-{
-    <p class="text-muted">Bu tarif için henüz malzeme eklenmemiş.</p>
-}
-else
-{
-    <table class="table table-bordered shadow-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>Malzeme</th>
-                <th>Miktar</th>
-                <th>Birim</th>
-                <th style="width: 170px;">İşlemler</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var item in Model.RecipeIngredients)
-            {
-                <tr>
-                    <td>@item.Ingredient.Name</td>
-                    <td>@item.Quantity</td>
-                    <td>@item.Unit</td>
-
-                    <td>
-                        <a href="/RecipeIngredients/Edit/@item.Id"
-                           class="btn btn-warning btn-sm">
-                            Düzenle
-                        </a>
-
-                        <a href="/RecipeIngredients/Delete/@item.Id"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Bu malzemeyi silmek istediğine emin misin?');">
-                            Sil
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
-
-<!-- BESİN DEĞERLERİ -->
-<h3 class="mt-5">🍏 Besin Değerleri</h3>
-
-@if (Model.NutritionFacts == null)
-{
-    <p class="text-muted">Besin bilgisi henüz hesaplanmadı.</p>
-}
-else
-{
-    <table class="table table-bordered shadow-sm w-50">
-        <thead class="table-light">
-            <tr>
-                <th>Bileşen</th>
-                <th>Değer</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Kalori</td>
-                <td>@Model.NutritionFacts.Calories kcal</td>
-            </tr>
-            <tr>
-                <td>Protein</td>
-                <td>@Model.NutritionFacts.Protein g</td>
-            </tr>
-            <tr>
-                <td>Yağ</td>
-                <td>@Model.NutritionFacts.Fat g</td>
-            </tr>
-            <tr>
-                <td>Karbonhidrat</td>
-                <td>@Model.NutritionFacts.Carbs g</td>
-            </tr>
-            <tr>
-                <td>Lif</td>
-                <td>@Model.NutritionFacts.Fiber g</td>
-            </tr>
-            <tr>
-                <td>Şeker</td>
-                <td>@Model.NutritionFacts.Sugar g</td>
-            </tr>
-            <tr>
-                <td>Sodyum</td>
-                <td>@Model.NutritionFacts.Sodium mg</td>
-            </tr>
-        </tbody>
-    </table>
-}

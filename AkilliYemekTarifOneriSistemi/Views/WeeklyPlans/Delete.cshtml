@@ -1,7 +1,7 @@
-@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+@model AkilliYemekTarifOneriSistemi.Models.WeeklyPlan
 
 @{
-    ViewData["Title"] = "Malzeme Sil";
+    ViewData["Title"] = "Plan Sil";
 }
 
 <div class="container mt-4">
@@ -9,23 +9,20 @@
         <div class="col-md-8 offset-md-2">
             <div class="card shadow-sm border-danger">
                 <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Malzeme Sil</h4>
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Haftalık Plan Sil</h4>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-warning" role="alert">
                         <h5 class="alert-heading">Dikkat!</h5>
-                        <p>Bu malzemeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+                        <p>Bu haftalık planı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve plan içindeki tüm öğünler silinecektir.</p>
                     </div>
 
                     <dl class="row">
-                        <dt class="col-sm-4">Malzeme Adı:</dt>
-                        <dd class="col-sm-8"><strong>@Model.Name</strong></dd>
-
-                        <dt class="col-sm-4">Varsayılan Birim:</dt>
+                        <dt class="col-sm-4">Plan Adı:</dt>
                         <dd class="col-sm-8">
-                            @if (!string.IsNullOrEmpty(Model.DefaultUnit))
+                            @if (!string.IsNullOrEmpty(Model.Title))
                             {
-                                <span class="badge bg-secondary">@Model.DefaultUnit</span>
+                                <strong>@Model.Title</strong>
                             }
                             else
                             {
@@ -33,29 +30,19 @@
                             }
                         </dd>
 
-                        <dt class="col-sm-4">Açıklama:</dt>
-                        <dd class="col-sm-8">
-                            @if (!string.IsNullOrEmpty(Model.Description))
-                            {
-                                @Model.Description
-                            }
-                            else
-                            {
-                                <span class="text-muted">-</span>
-                            }
-                        </dd>
+                        <dt class="col-sm-4">Başlangıç Tarihi:</dt>
+                        <dd class="col-sm-8">@Model.StartDate.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</dd>
 
-                        @if (Model.RecipeIngredients != null && Model.RecipeIngredients.Any())
+                        <dt class="col-sm-4">Bitiş Tarihi:</dt>
+                        <dd class="col-sm-8">@Model.StartDate.AddDays(6).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</dd>
+
+                        @if (Model.Items != null && Model.Items.Any())
                         {
-                            <dt class="col-sm-4">Kullanıldığı Tarifler:</dt>
+                            <dt class="col-sm-4">Toplam Öğün:</dt>
                             <dd class="col-sm-8">
                                 <span class="badge bg-warning text-dark">
-                                    @Model.RecipeIngredients.Count tarifte kullanılıyor
+                                    @Model.Items.Count öğün planlanmış
                                 </span>
-                                <br>
-                                <small class="text-muted">
-                                    Bu malzeme silindiğinde, bu tariflerden de otomatik olarak kaldırılacaktır.
-                                </small>
                             </dd>
                         }
                     </dl>
@@ -63,7 +50,7 @@
                     <form asp-action="Delete" method="post" class="mt-4">
                         <input type="hidden" asp-for="Id" />
                         <div class="d-flex justify-content-between">
-                            <a href="@Url.Action("Index", "Ingredients")" class="btn btn-secondary">
+                            <a href="@Url.Action("Index", "WeeklyPlans")" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> İptal
                             </a>
                             <button type="submit" class="btn btn-danger">

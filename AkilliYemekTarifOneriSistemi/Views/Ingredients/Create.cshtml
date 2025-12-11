@@ -1,25 +1,64 @@
-﻿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+@model AkilliYemekTarifOneriSistemi.Models.Ingredient
 
 @{
     ViewData["Title"] = "Yeni Malzeme Ekle";
 }
 
-<h2 class="mb-4">➕ Yeni Malzeme Ekle</h2>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Yeni Malzeme Ekle</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<form asp-action="Create" method="post" class="card p-4 shadow-sm">
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">
+                                <strong>Malzeme Adı <span class="text-danger">*</span></strong>
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Örn: Domates, Zeytinyağı" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Türkçe Adı</label>
-        <input asp-for="Name" class="form-control" placeholder="Örn: Domates" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="mb-3">
+                            <label asp-for="DefaultUnit" class="form-label">
+                                <strong>Varsayılan Birim</strong>
+                            </label>
+                            <input asp-for="DefaultUnit" class="form-control" placeholder="Örn: g, ml, adet, yemek kaşığı" />
+                            <span asp-validation-for="DefaultUnit" class="text-danger"></span>
+                            <small class="form-text text-muted">Bu malzeme genelde hangi birimle ölçülür?</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <strong>Açıklama</strong>
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="İsteğe bağlı açıklama ekleyebilirsiniz"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Index", "Ingredients")" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label class="form-label">İngilizce Adı (API için)</label>
-        <input asp-for="EnglishName" class="form-control" placeholder="Örn: Tomato" />
-        <span asp-validation-for="EnglishName" class="text-danger"></span>
-    </div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
 
-    <button type="submit" class="btn btn-success">Kaydet</button>
-    <a href="/Ingredients" class="btn btn-secondary">Geri Dön</a>
-</form>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+

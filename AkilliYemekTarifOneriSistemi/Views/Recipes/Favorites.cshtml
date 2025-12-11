@@ -1,27 +1,31 @@
 @model IEnumerable<AkilliYemekTarifOneriSistemi.Models.Recipe>
 
 @{
-    ViewData["Title"] = "Tarifler";
+    ViewData["Title"] = "Favori Tariflerim";
 }
 
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h1 class="display-4">🍽️ Tarifler</h1>
-            <p class="lead">Tüm yemek tariflerini keşfedin</p>
+            <h1 class="display-4">❤️ Favori Tariflerim</h1>
+            <p class="lead">Beğendiğiniz tarifleri buradan kolayca bulabilirsiniz</p>
         </div>
     </div>
 
     @if (Model == null || !Model.Any())
     {
         <div class="alert alert-info" role="alert">
-            <h4 class="alert-heading">Henüz tarif yok!</h4>
-            <p>Henüz sistemde kayıtlı tarif bulunmamaktadır. İlk tarifi eklemek için admin paneline giriş yapın.</p>
+            <h4 class="alert-heading">Henüz favori tarif yok!</h4>
+            <p>Henüz favorilerinize eklediğiniz bir tarif bulunmamaktadır. Tarif detay sayfasından "Favorilere Ekle" butonuna tıklayarak tarifleri favorilerinize ekleyebilirsiniz.</p>
+            <hr>
+            <a href="@Url.Action("Index", "Recipes")" class="btn btn-primary">
+                <i class="bi bi-search"></i> Tarifleri Keşfet
+            </a>
         </div>
     }
     else
     {
-        <!-- Tarif kartları grid görünümü -->
+        <!-- Favori tarif kartları grid görünümü -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @foreach (var recipe in Model)
             {
@@ -34,7 +38,6 @@
                         }
                         else
                         {
-                            <!-- Görsel yoksa placeholder -->
                             <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                 <i class="bi bi-image" style="font-size: 3rem; color: #ccc;"></i>
                             </div>
@@ -101,6 +104,6 @@
     }
 </div>
 
-<!-- Bootstrap Icons için CDN (eğer yoksa) -->
+<!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
