@@ -1,13 +1,14 @@
 using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
     /// <summary>
-    /// Malzeme (Ingredient) CRUD işlemlerini yöneten controller.
+    /// Malzeme (Ingredient) CRUD işlemlerini yöneten MVC controller.
+    /// Burası admin paneli gibi düşünülebilir; Razor View döner, API değildir.
     /// Melisa'nın sorumluluğu: Ingredient CRUD ekranları.
     /// </summary>
     public class IngredientsController : Controller
@@ -27,6 +28,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         /// </summary>
         public async Task<IActionResult> Index()
         {
+            // Tüm malzemeleri ada göre sıralı çekiyoruz
             var ingredients = await _context.Ingredients
                 .OrderBy(i => i.Name)
                 .ToListAsync();
@@ -46,6 +48,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 return NotFound();
             }
 
+            // Malzemenin kullanıldığı tarifleri de dahil ederek getiriyoruz
             var ingredient = await _context.Ingredients
                 .Include(i => i.RecipeIngredients)
                     .ThenInclude(ri => ri.Recipe)
@@ -74,15 +77,25 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,DefaultUnit,Description")] Ingredient ingredient)
+        public async Task<IActionResult> Create(Ingredient ingredient)
         {
+            // EnglishName için formdan manuel çekiyoruz.
+            // Bazı durumlarda model binding kaçırabiliyor, garantiye alıyoruz.
+            var englishNameFromForm = Request.Form["EnglishName"].ToString();
+            if (!string.IsNullOrWhiteSpace(englishNameFromForm))
+            {
+                ingredient.EnglishName = englishNameFromForm;
+            }
+
             if (ModelState.IsValid)
             {
-                _context.Add(ingredient);
+                _context.Ingredients.Add(ingredient);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Malzeme başarıyla eklendi!";
                 return RedirectToAction(nameof(Index));
             }
+
+            // Validasyon hatası varsa formu aynı model ile geri gösteriyoruz
             return View(ingredient);
         }
 
@@ -94,15 +107,12 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var ingredient = await _context.Ingredients.FindAsync(id);
             if (ingredient == null)
-            {
                 return NotFound();
-            }
+
             return View(ingredient);
         }
 
@@ -112,11 +122,17 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DefaultUnit,Description")] Ingredient ingredient)
+        public async Task<IActionResult> Edit(int id, Ingredient ingredient)
         {
+            // URL'deki id ile modeldeki id aynı olmalı
             if (id != ingredient.Id)
-            {
                 return NotFound();
+
+            // EnglishName için yine formdan manuel çekiyoruz
+            var englishNameFromForm = Request.Form["EnglishName"].ToString();
+            if (!string.IsNullOrWhiteSpace(englishNameFromForm))
+            {
+                ingredient.EnglishName = englishNameFromForm;
             }
 
             if (ModelState.IsValid)
@@ -127,7 +143,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Malzeme başarıyla güncellendi!";
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
                     if (!IngredientExists(ingredient.Id))
                     {
@@ -135,11 +151,15 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                     }
                     else
                     {
+                        _logger.LogError(ex, "Ingredient güncellenirken concurrency hatası oluştu. Id={Id}", ingredient.Id);
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
+            // Validasyon patlarsa formu tekrar gösteriyoruz
             return View(ingredient);
         }
 
@@ -151,9 +171,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var ingredient = await _context.Ingredients
                 .Include(i => i.RecipeIngredients)
@@ -161,9 +179,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 .FirstOrDefaultAsync(i => i.Id == id);
 
             if (ingredient == null)
-            {
                 return NotFound();
-            }
 
             return View(ingredient);
         }
@@ -177,14 +193,16 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var ingredient = await _context.Ingredients.FindAsync(id);
+
             if (ingredient != null)
             {
-                // Malzeme tariflerde kullanılıyorsa, önce RecipeIngredients kayıtları silinir (Cascade delete).
+                // Malzeme tariflerde kullanılıyorsa, ilişkiler cascade delete ile temizlenecek
                 _context.Ingredients.Remove(ingredient);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Malzeme başarıyla silindi!";
             }
 
+            // Silindikten sonra tekrar listeye dönüyoruz
             return RedirectToAction(nameof(Index));
         }
 
@@ -197,4 +215,3 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         }
     }
 }
-

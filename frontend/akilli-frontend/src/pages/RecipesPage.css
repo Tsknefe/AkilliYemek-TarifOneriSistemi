@@ -1,0 +1,168 @@
+/* src/pages/RecipesPage.css */
+
+.recipes-wrapper {
+  max-width: 1120px;
+  margin: 48px auto;
+  padding: 0 24px 40px;
+  color: #111827;
+}
+
+.recipes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.recipes-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.recipes-filters input,
+.recipes-filters select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  outline: none;
+  min-width: 220px;
+}
+
+.recipes-filters input:focus,
+.recipes-filters select:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px #bbf7d0;
+}
+
+.recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+/*  🔥 KARTLAR ARTIK AÇIK RENK  */
+.recipe-card {
+  background: #ffffff;
+  color: #111827;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  padding: 16px 18px;
+  box-shadow: 0 14px 32px rgba(148, 163, 184, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-3px);
+  border-color: #22c55e;
+  box-shadow: 0 22px 48px rgba(148, 163, 184, 0.4);
+}
+
+.recipe-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.recipe-description {
+  font-size: 14px;
+  color: #4b5563;
+  margin-bottom: 10px;
+}
+
+.recipe-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.recipe-meta span::before {
+  content: "• ";
+}
+
+.recipe-card-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.small-button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.small-button:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+/* Uyarı / bilgi metinleri */
+.alert {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background: #fee2e2;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+}
+
+.muted-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+/* ---- TARİF KARTLARI İÇİN KESİN AÇIK TEMA OVERRIDE ---- */
+
+.recipes-wrapper .recipe-card {
+  background: #ffffff !important;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 32px rgba(148, 163, 184, 0.25);
+  color: #111827 !important;
+}
+
+/* Kart içindeki tüm yazıları aç */
+.recipes-wrapper .recipe-card h3,
+.recipes-wrapper .recipe-card p,
+.recipes-wrapper .recipe-card span {
+  color: #111827 !important;
+}
+
+/* Meta satırını biraz daha gri yapalım */
+.recipes-wrapper .recipe-card .recipe-meta span {
+  color: #6b7280 !important;
+}

@@ -14,10 +14,16 @@ namespace AkilliYemekTarifOneriSistemi.Models
         public int Id { get; set; }
 
         /// <summary>
-        /// Malzemenin görünen adı.
+        /// Kullanıcının gördüğü Türkçe isim.
         /// Örn: "Domates", "Zeytinyağı"
         /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// API aramaları için İngilizce isim.
+        /// Örn: "Tomato", "Olive Oil"
+        /// </summary>
+        public string? EnglishName { get; set; }
 
         /// <summary>
         /// Malzeme genelde hangi birim ile ölçülür?
@@ -38,6 +44,3 @@ namespace AkilliYemekTarifOneriSistemi.Models
         public ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
     }
 }
-
-
-

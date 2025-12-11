@@ -1,0 +1,49 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+
+@{
+    ViewData["Title"] = "Yeni Tarif Ekle";
+}
+
+<h2 class="mb-4">➕ Yeni Tarif Ekle</h2>
+
+<form asp-action="Create" method="post" class="card p-4 shadow-sm">
+
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label class="form-label">Tarif Adı</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Açıklama</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Pişirme Süresi (dk)</label>
+        <input asp-for="CookingTime" class="form-control" type="number" step="1" />
+        <span asp-validation-for="CookingTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Servis Sayısı</label>
+        <input asp-for="Servings" class="form-control" type="number" step="1" />
+        <span asp-validation-for="Servings" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Diyet Tipi</label>
+        <input asp-for="DietType" class="form-control" />
+        <span asp-validation-for="DietType" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Kaydet</button>
+    <a href="/Recipes" class="btn btn-secondary">Geri</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

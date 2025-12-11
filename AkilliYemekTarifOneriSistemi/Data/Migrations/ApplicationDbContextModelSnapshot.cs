@@ -74,6 +74,9 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("EnglishName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -81,6 +84,46 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Ingredients");
+                });
+
+            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.NutritionFacts", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Calories")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Carbs")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Fat")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Fiber")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Protein")
+                        .HasColumnType("float");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Sodium")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Sugar")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId")
+                        .IsUnique();
+
+                    b.ToTable("NutritionFacts");
                 });
 
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Recipe", b =>
@@ -94,16 +137,37 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<int>("CookingTime")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DietType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Difficulty")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Instructions")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int?>("PreparationTimeMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Servings")
                         .HasColumnType("int");
 
                     b.Property<string>("ShortDescription")
@@ -122,25 +186,41 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
 
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.RecipeIngredient", b =>
                 {
-                    b.Property<int>("RecipeId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("IngredientId")
-                        .HasColumnType("int");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<double>("CalculatedGrams")
+                        .HasColumnType("float");
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Quantity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Unit")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("RecipeId", "IngredientId");
+                    b.HasKey("Id");
 
                     b.HasIndex("IngredientId");
+
+                    b.HasIndex("RecipeId", "IngredientId")
+                        .IsUnique();
 
                     b.ToTable("RecipeIngredients");
                 });
@@ -175,6 +255,72 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.UserAllergy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("UserAllergies");
+                });
+
+            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.UserProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActivityLevel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DietType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Goal")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("HeightCm")
+                        .HasColumnType("float");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double>("WeightKg")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserProfiles");
                 });
 
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlan", b =>
@@ -454,6 +600,17 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.NutritionFacts", b =>
+                {
+                    b.HasOne("AkilliYemekTarifOneriSistemi.Models.Recipe", "Recipe")
+                        .WithOne("NutritionFacts")
+                        .HasForeignKey("AkilliYemekTarifOneriSistemi.Models.NutritionFacts", "RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Recipe", b =>
                 {
                     b.HasOne("AkilliYemekTarifOneriSistemi.Models.Category", "Category")
@@ -499,6 +656,28 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
                     b.Navigation("Recipe");
 
                     b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.UserAllergy", b =>
+                {
+                    b.HasOne("AkilliYemekTarifOneriSistemi.Models.Ingredient", "Ingredient")
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+                });
+
+            modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.UserProfile", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.WeeklyPlan", b =>
@@ -595,6 +774,8 @@ namespace AkilliYemekTarifOneriSistemi.Data.Migrations
             modelBuilder.Entity("AkilliYemekTarifOneriSistemi.Models.Recipe", b =>
                 {
                     b.Navigation("FavoriteRecipes");
+
+                    b.Navigation("NutritionFacts");
 
                     b.Navigation("RecipeIngredients");
 

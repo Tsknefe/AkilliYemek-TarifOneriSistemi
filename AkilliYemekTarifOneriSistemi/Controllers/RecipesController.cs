@@ -8,8 +8,12 @@ using Microsoft.EntityFrameworkCore;
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
     /// <summary>
-    /// Tarif (Recipe) listeleme ve detay gösterme işlemlerini yöneten controller.
-    /// Melisa'nın sorumluluğu: Tarif listeleme ekranı (Card/Grid UI) ve Tarif detay ekranı.
+    /// Tarif (Recipe) listeleme ve detay gösterme işlemlerini yöneten MVC controller.
+    /// Burası kullanıcı tarafındaki arayüz:
+    /// - Tarifleri kart/grid şeklinde listeleme
+    /// - Tarif detay sayfası
+    /// - Favorilere ekleme / çıkarma
+    /// Admin CRUD kısmı ileride ayrı bir controller olarak eklenebilir.
     /// </summary>
     public class RecipesController : Controller
     {
@@ -17,7 +21,10 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         private readonly ILogger<RecipesController> _logger;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public RecipesController(ApplicationDbContext context, ILogger<RecipesController> logger, UserManager<IdentityUser> userManager)
+        public RecipesController(
+            ApplicationDbContext context,
+            ILogger<RecipesController> logger,
+            UserManager<IdentityUser> userManager)
         {
             _context = context;
             _logger = logger;
@@ -191,4 +198,3 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
         }
     }
 }
-

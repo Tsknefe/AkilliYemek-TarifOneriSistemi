@@ -1,0 +1,47 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+
+<h2 class="mb-4">✏️ Tarif Düzenle</h2>
+
+<form asp-action="Edit" method="post" class="card p-4 shadow-sm">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label>Tarif Adı</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Açıklama</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Pişirme Süresi</label>
+        <input asp-for="CookingTime" class="form-control" />
+        <span asp-validation-for="CookingTime" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Servis Sayısı</label>
+        <input asp-for="Servings" class="form-control" />
+        <span asp-validation-for="Servings" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Diyet Tipi</label>
+        <input asp-for="DietType" class="form-control" />
+        <span asp-validation-for="DietType" class="text-danger"></span>
+    </div>
+
+    <!-- 🔥 Yeni eklenen Hazırlanış alanı -->
+    <div class="mb-3">
+        <label>Hazırlanış (adım adım)</label>
+        <textarea asp-for="Instructions" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Instructions" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-warning">Güncelle</button>
+    <a href="/Recipes" class="btn btn-secondary">Geri</a>
+</form>
