@@ -1,0 +1,31 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h3>🥕 Malzeme Ekle</h3>
+
+<form method="post">
+    <input type="hidden" name="recipeId" value="@ViewBag.RecipeId" />
+
+    <div class="mb-3">
+        <label>Malzeme</label>
+        <select name="ingredientId" class="form-select">
+            @foreach (var ing in ViewBag.Ingredients)
+            {
+                <option value="@ing.Id">@ing.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Miktar</label>
+        <input name="quantity" type="number" step="0.1" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Birim</label>
+        <input name="unit" class="form-control" placeholder="gr / ml / adet" />
+    </div>
+
+    <button class="btn btn-success">Ekle</button>
+</form>

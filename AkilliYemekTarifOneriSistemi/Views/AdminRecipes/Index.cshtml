@@ -1,0 +1,66 @@
+﻿@model List<AkilliYemekTarifOneriSistemi.Models.Recipe>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-3">🍽️ Tarifler</h2>
+
+<a asp-action="Create" class="btn btn-success mb-3">
+    + Yeni Tarif
+</a>
+
+<table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Başlık</th>
+            <th>Süre (dk)</th>
+            <th>Kalori</th>
+            <th style="width:260px">İşlemler</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.Title</td>
+
+                <td>
+                    @r.CookingTime
+                </td>
+
+                <td>
+                    @(
+                                    r.NutritionFacts != null
+                                    ? Math.Round(r.NutritionFacts.Calories, 0)
+                                    : 0
+                                    ) kcal
+            </td>
+
+                <td class="d-flex gap-1">
+                    <!-- ✏️ DÜZENLE -->
+                    <a asp-action="Edit"
+                       asp-route-id="@r.Id"
+                       class="btn btn-warning btn-sm">
+                        Düzenle
+                    </a>
+
+                    <!-- 🧂 MALZEMELER -->
+                    <a asp-controller="AdminRecipeIngredients"
+                       asp-action="Index"
+                       asp-route-recipeId="@r.Id"
+                       class="btn btn-info btn-sm">
+                        🧂 Malzemeler
+                    </a>
+
+                    <!-- ❌ SİL -->
+                    <a asp-action="Delete"
+                       asp-route-id="@r.Id"
+                       class="btn btn-danger btn-sm">
+                        Sil
+                    </a>
+                </td>
+            </tr>
+                }
+    </tbody>
+</table>

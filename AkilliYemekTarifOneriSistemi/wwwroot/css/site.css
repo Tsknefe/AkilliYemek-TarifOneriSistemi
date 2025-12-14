@@ -1,31 +1,134 @@
-html {
-  font-size: 14px;
+/* =====================================================
+   GLOBAL
+===================================================== */
+:root {
+    --primary: #8B0000; /* Bordo */
+    --dark: #111111;
+    --light: #ffffff;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+section {
+    margin-bottom: 3rem;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* =====================================================
+   NAVBAR – BORDO VURGU (SEÇENEK 1)
+===================================================== */
+.custom-navbar {
+    background-color: #ffffff;
+    border-bottom: 3px solid var(--primary); /* Bordo çizgi */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    height: 76px;
+    display: flex;
+    align-items: center;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.navbar-brand {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    font-weight: 800;
 }
 
-body {
-  margin-bottom: 60px;
+.navbar-logo {
+    height:140px; /* Logo büyük */
+    width: auto;
+    position: relative;
+    top: 4px; /* Navbarý büyütmeden taþýr */
+    transition: 0.3s ease;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+    .navbar-logo:hover {
+        transform: scale(1.05);
+    }
+
+.nav-link {
+    font-weight: 500;
+    color: var(--dark) !important;
+    position: relative;
+    padding-bottom: 6px;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    .nav-link:hover {
+        color: var(--primary) !important;
+    }
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+    .btn-primary:hover {
+        background-color: #700000;
+        border-color: #700000;
+    }
+
+/* =====================================================
+   RECIPE CARDS
+===================================================== */
+.recipe-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+}
+
+    .recipe-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(0,0,0,.15);
+    }
+
+.recipe-img {
+    height: 220px;
+    object-fit: cover;
+}
+
+/* =====================================================
+   BADGES
+===================================================== */
+.badge-soft {
+    background-color: rgba(0,0,0,.6);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: .75rem;
+}
+
+/* =====================================================
+   DETAILS PAGE
+===================================================== */
+.recipe-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.ingredient-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    margin-bottom: 8px;
+}
+
+/* =====================================================
+   MOBILE FIXES
+===================================================== */
+@media (max-width: 768px) {
+
+    .custom-navbar {
+        height: 64px;
+    }
+
+    .navbar-brand {
+        height: 64px;
+    }
+
+    .navbar-logo {
+        height: 72px;
+        top: 6px;
+    }
 }

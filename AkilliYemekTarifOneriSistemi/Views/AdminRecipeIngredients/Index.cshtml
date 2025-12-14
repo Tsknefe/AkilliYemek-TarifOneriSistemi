@@ -1,0 +1,92 @@
+﻿@model List<AkilliYemekTarifOneriSistemi.Models.RecipeIngredient>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var recipe = ViewBag.Recipe;
+}
+
+<h2 class="mb-3">
+    🧂 @recipe.Title – Malzemeler
+</h2>
+
+<!-- ➕ MALZEME EKLEME FORMU -->
+<form asp-action="Add" method="post" class="row g-3 mb-4">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="recipeId" value="@recipe.Id" />
+
+    <div class="col-md-4">
+        <label class="form-label">Malzeme</label>
+        <select name="ingredientId"
+                class="form-select"
+                asp-items="ViewBag.Ingredients"
+                required>
+            <option value="">Seçiniz</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Miktar</label>
+        <input type="number"
+               name="amount"
+               step="0.1"
+               class="form-control"
+               required />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Birim</label>
+        <input type="text"
+               name="unit"
+               class="form-control"
+               placeholder="g / ml / adet"
+               required />
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-success w-100">
+            ➕ Ekle
+        </button>
+    </div>
+</form>
+
+<!-- 📋 EKLENEN MALZEMELER -->
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Malzeme</th>
+            <th>Miktar</th>
+            <th>Gram</th>
+            <th>Kalori</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Ingredient.Name</td>
+                <td>@item.Quantity @item.Unit</td>
+                <td>@Math.Round(item.CalculatedGrams, 1) g</td>
+                <td>
+                    <!-- Burası API ile hesaplanır -->
+                    🔥 hesaplandı
+                </td>
+                <td>
+                    <form asp-action="Remove" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <input type="hidden" name="recipeId" value="@recipe.Id" />
+                        <button class="btn btn-danger btn-sm">❌</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-controller="AdminRecipes"
+   asp-action="Index"
+   class="btn btn-secondary mt-3">
+    ← Tariflere Dön
+</a>

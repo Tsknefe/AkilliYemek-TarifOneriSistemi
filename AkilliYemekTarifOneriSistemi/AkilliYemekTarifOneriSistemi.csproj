@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-AkilliYemekTarifOneriSistemi-652cdfc3-4e06-4567-b81c-81282d25eaf9</UserSecretsId>
+	<StaticWebAssetsCompressionEnabled>false</StaticWebAssetsCompressionEnabled>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +18,12 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\uploads\recipes\" />
   </ItemGroup>
 
 </Project>
