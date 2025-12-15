@@ -1,0 +1,70 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>✏️ Tarif Düzenle</h2>
+
+<form asp-action="Edit" method="post">
+
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label class="form-label">Başlık</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Açıklama</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Pişirme Süresi (dk)</label>
+            <input asp-for="CookingTime" class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Hazırlık Süresi (dk)</label>
+            <input asp-for="PreparationTimeMinutes" class="form-control" />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Kaç Kişilik</label>
+            <input asp-for="Servings" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Diyet Türü</label>
+            <input asp-for="DietType" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Zorluk</label>
+            <select asp-for="Difficulty" class="form-select">
+                <option value="">Seçiniz</option>
+                <option>Kolay</option>
+                <option>Orta</option>
+                <option>Zor</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Hazırlanış</label>
+        <textarea asp-for="Instructions" class="form-control" rows="4"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Güncelle</button>
+    <a asp-action="Index" class="btn btn-secondary">İptal</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

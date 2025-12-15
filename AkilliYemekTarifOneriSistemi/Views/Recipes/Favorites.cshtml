@@ -1,109 +1,33 @@
-@model IEnumerable<AkilliYemekTarifOneriSistemi.Models.Recipe>
+@model List<AkilliYemekTarifOneriSistemi.Models.Recipe>
 
-@{
-    ViewData["Title"] = "Favori Tariflerim";
-}
+<h2 class="fw-bold mb-4">❤️ Favorilerim</h2>
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="display-4">❤️ Favori Tariflerim</h1>
-            <p class="lead">Beğendiğiniz tarifleri buradan kolayca bulabilirsiniz</p>
-        </div>
+@if (!Model.Any())
+{
+    <div class="alert alert-info rounded-4">
+        Henüz favori tarifiniz yok.
     </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var r in Model)
+        {
+            <div class="col-md-4">
+                <div class="card recipe-card border-0 shadow-sm">
+                    <img src="@r.ImageUrl" class="recipe-img w-100" />
 
-    @if (Model == null || !Model.Any())
-    {
-        <div class="alert alert-info" role="alert">
-            <h4 class="alert-heading">Henüz favori tarif yok!</h4>
-            <p>Henüz favorilerinize eklediğiniz bir tarif bulunmamaktadır. Tarif detay sayfasından "Favorilere Ekle" butonuna tıklayarak tarifleri favorilerinize ekleyebilirsiniz.</p>
-            <hr>
-            <a href="@Url.Action("Index", "Recipes")" class="btn btn-primary">
-                <i class="bi bi-search"></i> Tarifleri Keşfet
-            </a>
-        </div>
-    }
-    else
-    {
-        <!-- Favori tarif kartları grid görünümü -->
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            @foreach (var recipe in Model)
-            {
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <!-- Tarif görseli -->
-                        @if (!string.IsNullOrEmpty(recipe.ImageUrl))
-                        {
-                            <img src="@recipe.ImageUrl" class="card-img-top" alt="@recipe.Title" style="height: 200px; object-fit: cover;">
-                        }
-                        else
-                        {
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="bi bi-image" style="font-size: 3rem; color: #ccc;"></i>
-                            </div>
-                        }
+                    <div class="card-body">
+                        <h6 class="fw-bold">@r.Title</h6>
 
-                        <div class="card-body d-flex flex-column">
-                            <!-- Kategori badge -->
-                            @if (recipe.Category != null)
-                            {
-                                <span class="badge bg-primary mb-2">@recipe.Category.Name</span>
-                            }
-
-                            <!-- Tarif başlığı -->
-                            <h5 class="card-title">@recipe.Title</h5>
-
-                            <!-- Kısa açıklama -->
-                            @if (!string.IsNullOrEmpty(recipe.ShortDescription))
-                            {
-                                <p class="card-text text-muted">@recipe.ShortDescription</p>
-                            }
-
-                            <!-- Tarif bilgileri (süre, zorluk) -->
-                            <div class="mt-auto">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    @if (recipe.PreparationTimeMinutes.HasValue)
-                                    {
-                                        <small class="text-muted">
-                                            <i class="bi bi-clock"></i> @recipe.PreparationTimeMinutes dk
-                                        </small>
-                                    }
-                                    @if (!string.IsNullOrEmpty(recipe.Difficulty))
-                                    {
-                                        <small class="text-muted">
-                                            <i class="bi bi-star"></i> @recipe.Difficulty
-                                        </small>
-                                    }
-                                </div>
-
-                                <!-- Etiketler -->
-                                @if (recipe.RecipeTags != null && recipe.RecipeTags.Any())
-                                {
-                                    <div class="mb-2">
-                                        @foreach (var recipeTag in recipe.RecipeTags.Take(3))
-                                        {
-                                            <span class="badge bg-secondary me-1">@recipeTag.Tag.Name</span>
-                                        }
-                                        @if (recipe.RecipeTags.Count > 3)
-                                        {
-                                            <span class="badge bg-secondary">+@(recipe.RecipeTags.Count - 3)</span>
-                                        }
-                                    </div>
-                                }
-
-                                <!-- Detay butonu -->
-                                <a href="@Url.Action("Details", "Recipes", new { id = recipe.Id })" class="btn btn-primary w-100">
-                                    <i class="bi bi-eye"></i> Detayları Gör
-                                </a>
-                            </div>
-                        </div>
+                        <a asp-action="Details"
+                           asp-route-id="@r.Id"
+                           class="btn btn-sm btn-outline-dark w-100 rounded-pill">
+                            Gör →
+                        </a>
                     </div>
                 </div>
-            }
-        </div>
-    }
-</div>
-
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
+            </div>
+        }
+    </div>
+}

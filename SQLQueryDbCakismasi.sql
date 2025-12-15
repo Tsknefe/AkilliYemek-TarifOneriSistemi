@@ -1,0 +1,6 @@
+﻿USE master;
+IF DB_ID('AkilliYemekTarif_DB') IS NOT NULL
+BEGIN
+    ALTER DATABASE [AkilliYemekTarif_DB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [AkilliYemekTarif_DB];
+END

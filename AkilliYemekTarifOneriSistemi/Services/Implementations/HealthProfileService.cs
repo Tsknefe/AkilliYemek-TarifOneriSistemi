@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 {
-    // bu service tamamen kullanıcının sağlık profilini hesaplamak için yazıldı
-    // burada hedef kalori hesabı, makro besin dağılımı gibi hesaplamaları yapıyoruz
-    // recommendation motoru ve weekly plan bu bilgileri kullanıyor
-
     public class HealthProfileService : IHealthProfileService
     {
         private readonly ApplicationDbContext _context;
@@ -18,27 +14,46 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _context = context;
         }
 
-        // kullanıcıya ait profil bilgilerini çekiyoruz
-        // eğer profil yoksa controller tarafında otomatik oluşturulmuş oluyor zaten
+        // ============================
+        // PROFİL
+        // ============================
         public async Task<UserProfile?> GetProfileAsync(string userId)
         {
             return await _context.UserProfiles
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.UserId == userId);
         }
 
-        // burada BMR hesabı yapıyorum
-        // mifflin st jeor formülü daha doğru kabul ediliyor
-        // erkek ve kadın için iki farklı formül var
-        private double CalculateBmr(UserProfile p)
+        // ============================
+        // BMI
+        // ============================
+        public double CalculateBMI(double heightCm, double weightKg)
         {
-            if (p.Gender == "Male")
-                return 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age + 5;
-
-            return 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age - 161;
+            var heightMeter = heightCm / 100.0;
+            return Math.Round(weightKg / (heightMeter * heightMeter), 1);
         }
 
-        // kullanıcının aktivite seviyesine göre çarpan belirliyoruz
-        // bu çarpan BMR ile çarpılarak günlük bakım kalorisi bulunuyor
+        public string GetBMICategory(double bmi)
+        {
+            if (bmi < 18.5) return "Zayıf";
+            if (bmi < 25) return "Normal";
+            if (bmi < 30) return "Fazla Kilolu";
+            return "Obez";
+        }
+
+        // ============================
+        // BMR (PRIVATE)
+        // ============================
+        private double CalculateBmr(UserProfile p)
+        {
+            return p.Gender == "Male"
+                ? 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age + 5
+                : 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age - 161;
+        }
+
+        // ============================
+        // AKTİVİTE ÇARPANI
+        // ============================
         private double GetActivityMultiplier(string level)
         {
             return level switch
@@ -48,55 +63,59 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 "moderate" => 1.55,
                 "active" => 1.725,
                 "athlete" => 1.9,
-                _ => 1.2,
+                _ => 1.2
             };
         }
 
-        // burada kullanıcının hedef kalorisini hesaplıyorum
-        // önce BMR hesaplanıyor
-        // sonra aktivite seviyesi çarpanı uygulanıyor
-        // daha sonra kullanıcının hedefine göre +/- 300 kalori ekleniyor
+        // ============================
+        // BAKIM KALORİSİ
+        // ============================
+        public double CalculateMaintenanceCalories(UserProfile profile)
+        {
+            double bmr = CalculateBmr(profile);
+            double multiplier = GetActivityMultiplier(profile.ActivityLevel);
+            return Math.Round(bmr * multiplier);
+        }
+
+        // ============================
+        // HEDEF KALORİ
+        // ============================
         public async Task<double?> GetTargetCaloriesAsync(string userId)
         {
-            var p = await GetProfileAsync(userId);
-            if (p is null)
+            var profile = await GetProfileAsync(userId);
+            if (profile == null)
                 return null;
 
-            double bmr = CalculateBmr(p);
-            double activity = GetActivityMultiplier(p.ActivityLevel);
+            double maintenance = CalculateMaintenanceCalories(profile);
 
-            double maintenance = bmr * activity;
-
-            return p.Goal switch
+            return profile.Goal switch
             {
-                "Lose" => maintenance - 300,      // kilo vermek isteyen için hafif kalori açığı
-                "Gain" => maintenance + 300,      // kilo almak isteyen için kalori fazlası
-                _ => maintenance                  // maintain için direkt bakım kalorisi
+                "Lose" => maintenance - 300,
+                "Gain" => maintenance + 300,
+                _ => maintenance
             };
         }
 
-        // burada makro hedeflerini hesaplıyorum
-        // protein yağ karbonhidrat dağılımı klasik 25 30 45 olarak ayarladım
-        // bu değerler recommendation motorunda tariflere skor verirken kullanılabiliyor
+        // ============================
+        // MAKRO HEDEFLERİ
+        // ============================
         public async Task<(double proteinGr, double fatGr, double carbGr)?> GetMacroTargetsAsync(string userId)
         {
-            var cal = await GetTargetCaloriesAsync(userId);
-            if (!cal.HasValue)
+            var calories = await GetTargetCaloriesAsync(userId);
+            if (!calories.HasValue)
                 return null;
 
-            double c = cal.Value;
+            double total = calories.Value;
 
-            // 1 gr protein = 4 kalori
-            // 1 gr karbonhidrat = 4 kalori
-            // 1 gr yağ = 9 kalori
-            double proteinCal = c * 0.25;
-            double fatCal = c * 0.30;
-            double carbCal = c * 0.45;
+            // %25 protein – %30 yağ – %45 karbonhidrat
+            double proteinCal = total * 0.25;
+            double fatCal = total * 0.30;
+            double carbCal = total * 0.45;
 
             return (
-                proteinGr: proteinCal / 4,
-                fatGr: fatCal / 9,
-                carbGr: carbCal / 4
+                proteinGr: Math.Round(proteinCal / 4, 1),
+                fatGr: Math.Round(fatCal / 9, 1),
+                carbGr: Math.Round(carbCal / 4, 1)
             );
         }
     }

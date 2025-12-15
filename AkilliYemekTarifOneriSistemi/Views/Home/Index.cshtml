@@ -1,8 +1,195 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<AkilliYemekTarifOneriSistemi.Models.Recipe>
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<style>
+    /* HERO */
+    .hero-section {
+        background: linear-gradient(135deg, #6f1d1b, #3a0f0d);
+        color: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    /* HERO SOL ALAN */
+    .hero-content {
+        padding-top: 10px;
+    }
+
+    .hero-logo {
+        height: 200px;
+        margin-bottom: 20px;
+        margin-left: -10px; /* sola */
+        margin-top: -20px; /* yukarı */
+    }
+
+    .hero-content h1 {
+        margin-top: -10px;
+    }
+
+    .hero-content p {
+        margin-top: -4px;
+    }
+
+    .hero-image-wrapper {
+        position: relative;
+    }
+
+        .hero-image-wrapper::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.25);
+            border-radius: 20px;
+        }
+
+        .hero-image-wrapper img {
+            border-radius: 20px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    /* RECIPE CARD */
+    .recipe-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+        .recipe-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0,0,0,.12);
+        }
+
+    .recipe-img {
+        height: 220px;
+        object-fit: cover;
+    }
+
+    /* CTA */
+    .cta-section {
+        background: linear-gradient(135deg, #3a0f0d, #6f1d1b);
+        border-radius: 24px;
+    }
+</style>
+
+<!-- ================= HERO ================= -->
+<section class="hero-section p-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+
+            <!-- SOL -->
+            <div class="col-lg-6 hero-content">
+                <img src="~/images/3logo.png" class="hero-logo" />
+
+                <h1 class="fw-bold display-5 mb-3">
+                    Akıllı Yemek<br />
+                    Tarif Öneri Sistemi
+                </h1>
+
+                <p class="opacity-75 fs-5 mb-4">
+                    Elindeki malzemelere göre tarif önerileri,
+                    kişisel beslenme hedefleri ve haftalık planlama
+                    tek bir yerde.
+                </p>
+
+                <a asp-controller="Recipes"
+                   asp-action="Index"
+                   class="btn btn-light btn-lg rounded-pill px-5">
+                    Tarifleri Keşfet
+                </a>
+            </div>
+
+            <!-- SAĞ -->
+            <div class="col-lg-6">
+                <div class="hero-image-wrapper shadow-lg">
+                    <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================= SON EKLENEN TARİFLER ================= -->
+<section class="mb-5">
+    <div class="container">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Son Eklenen Tarifler</h2>
+
+            <a asp-controller="Recipes"
+               asp-action="Index"
+               class="btn btn-outline-secondary rounded-pill">
+                Tümünü Gör
+            </a>
+        </div>
+
+        <div class="row g-4">
+
+            @if (!Model.Any())
+            {
+                <p class="text-muted">Henüz tarif eklenmedi.</p>
+            }
+            else
+            {
+                foreach (var recipe in Model)
+                {
+                    <div class="col-md-4">
+                        <div class="card recipe-card h-100">
+
+                            <img src="@(string.IsNullOrEmpty(recipe.ImageUrl)
+                                                                 ? "https://via.placeholder.com/400x250"
+                                                                 : recipe.ImageUrl)"
+                                                                                   class="recipe-img" />
+
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="fw-semibold">@recipe.Title</h5>
+
+                                <p class="text-muted small mb-4">
+                                    @(recipe.Description?.Length > 90
+                                                                ? recipe.Description.Substring(0, 90) + "..."
+                                                                : recipe.Description)
+                        </p>
+
+                                <a asp-controller="Recipes"
+                                   asp-action="Details"
+                                   asp-route-id="@recipe.Id"
+                                   class="btn btn-primary rounded-pill mt-auto">
+                                    Detayı Gör
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                        }
+            }
+
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta-section py-5 text-white">
+    <div class="container text-center">
+
+        <h2 class="fw-bold mb-3">
+            Bugün Ne Pişirsem?
+        </h2>
+
+        <p class="opacity-75 mb-4">
+            Porsiyon ile karar vermek artık çok daha kolay.
+        </p>
+
+        <a asp-controller="Recipes"
+           asp-action="Index"
+           class="btn btn-light btn-lg rounded-pill px-5">
+            Tariflere Git
+        </a>
+
+    </div>
+</section>

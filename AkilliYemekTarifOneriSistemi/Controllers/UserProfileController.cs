@@ -1,5 +1,6 @@
 ﻿using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,39 +8,55 @@ using System.Security.Claims;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    // bu controller kullanıcının kendi profilini yönettiği yer
-    // yaş boy kilo aktivite seviyesi diyet tipi gibi bilgiler burada tutuluyor
-    // öneri motoru bu bilgileri kullanarak daha kişisel sonuç üretiyor
-    // authorize olduğu için giriş yapmadan erişim mümkün değil
     [Authorize]
     public class UserProfileController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHealthProfileService _healthService;
 
-        public UserProfileController(ApplicationDbContext context)
+        public UserProfileController(
+            ApplicationDbContext context,
+            IHealthProfileService healthService)
         {
             _context = context;
+            _healthService = healthService;
         }
 
-        // login olmuş kullanıcının Id sini claimden çekiyoruz
         private string? GetCurrentUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier);
         }
 
-        // profil düzenleme ekranı GET
-        // kullanıcı ilk defa geliyorsa otomatik olarak default bir profil oluşturuluyor
-        public async Task<IActionResult> Edit()
+        // ============================
+        // INDEX – PROFİL ÖZETİ
+        // ============================
+        public async Task<IActionResult> Index()
         {
             var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
+            if (userId == null) return Unauthorized();
 
-            // ilgili kullanıcı profil tablosunda var mı kontrol ediyoruz
             var profile = await _context.UserProfiles
                 .FirstOrDefaultAsync(x => x.UserId == userId);
 
-            // profil yoksa default değerlerle yeni bir profil oluşturuyoruz
+            if (profile == null)
+                return RedirectToAction(nameof(Edit));
+
+            FillHealthViewBags(profile, userId);
+
+            return View(profile);
+        }
+
+        // ============================
+        // GET – PROFİL DÜZENLE
+        // ============================
+        public async Task<IActionResult> Edit()
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null) return Unauthorized();
+
+            var profile = await _context.UserProfiles
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
             if (profile == null)
             {
                 profile = new UserProfile
@@ -61,28 +78,24 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             return View(profile);
         }
 
-        // profil düzenleme POST
-        // viewdan gelen model ile veritabanındaki profil güncelleniyor
+        // ============================
+        // POST – PROFİL GÜNCELLE
+        // ============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UserProfile model)
         {
             var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
+            if (userId == null) return Unauthorized();
 
-            // veritabanındaki gerçek kaydı çekiyoruz
             var existing = await _context.UserProfiles
                 .FirstOrDefaultAsync(x => x.UserId == userId);
 
-            if (existing == null)
-                return NotFound();
+            if (existing == null) return NotFound();
 
-            // validasyon hatası olursa tekrar formu gösteriyoruz
             if (!ModelState.IsValid)
                 return View(model);
 
-            // kullanıcı formda ne girdiyse o değerleri profile aktarıyoruz
             existing.Age = model.Age;
             existing.HeightCm = model.HeightCm;
             existing.WeightKg = model.WeightKg;
@@ -91,12 +104,30 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             existing.Goal = model.Goal;
             existing.DietType = model.DietType;
 
+            // 🔥 EF CORE ZORLA UPDATE
+            _context.Entry(existing).State = EntityState.Modified;
+
             await _context.SaveChangesAsync();
 
-            // kullanıcıya başarılı olduğuna dair mesaj gösterebilmek için
-            ViewBag.Message = "Profiliniz başarıyla güncellendi";
+            TempData["SuccessMessage"] = "Profiliniz başarıyla güncellendi";
 
-            return View(existing);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ============================
+        // HESAPLAMALAR
+        // ============================
+        private void FillHealthViewBags(UserProfile profile, string userId)
+        {
+            var bmi = _healthService.CalculateBMI(profile.HeightCm, profile.WeightKg);
+            var bmiCategory = _healthService.GetBMICategory(bmi);
+            var maintenance = _healthService.CalculateMaintenanceCalories(profile);
+            var target = _healthService.GetTargetCaloriesAsync(userId).Result;
+
+            ViewBag.BMI = Math.Round(bmi, 1);
+            ViewBag.BMICategory = bmiCategory;
+            ViewBag.MaintenanceCalories = Math.Round(maintenance);
+            ViewBag.TargetCalories = Math.Round(target ?? maintenance);
         }
     }
 }

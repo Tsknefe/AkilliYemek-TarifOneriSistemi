@@ -7,194 +7,137 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    /// <summary>
-    /// Tarif (Recipe) listeleme ve detay gösterme işlemlerini yöneten MVC controller.
-    /// Burası kullanıcı tarafındaki arayüz:
-    /// - Tarifleri kart/grid şeklinde listeleme
-    /// - Tarif detay sayfası
-    /// - Favorilere ekleme / çıkarma
-    /// Admin CRUD kısmı ileride ayrı bir controller olarak eklenebilir.
-    /// </summary>
     public class RecipesController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<RecipesController> _logger;
         private readonly UserManager<IdentityUser> _userManager;
 
         public RecipesController(
             ApplicationDbContext context,
-            ILogger<RecipesController> logger,
             UserManager<IdentityUser> userManager)
         {
             _context = context;
-            _logger = logger;
             _userManager = userManager;
         }
 
-        /// <summary>
-        /// Tüm tarifleri listeleyen sayfa (Card/Grid görünümü).
-        /// GET: /Recipes veya /Recipes/Index
-        /// </summary>
-        public async Task<IActionResult> Index()
+        // 📋 Tarif Listesi + 🔎 Arama (Title üzerinden)
+        // /Recipes veya /Recipes?q=makarna
+        [HttpGet]
+        public async Task<IActionResult> Index(string? q)
         {
-            // Tüm tarifleri kategorileri ve etiketleriyle birlikte getiriyoruz.
-            var recipes = await _context.Recipes
-                .Include(r => r.Category) // Kategori bilgisi için
-                .Include(r => r.RecipeTags)
-                    .ThenInclude(rt => rt.Tag) // Etiket bilgileri için
-                .OrderByDescending(r => r.Id) // En yeni tarifler üstte
+            IQueryable<Recipe> query = _context.Recipes
+                .Include(r => r.NutritionFacts);
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                q = q.Trim();
+
+                // Title üzerinden arama
+                query = query.Where(r => r.Title.Contains(q));
+            }
+
+            var recipes = await query
+                .OrderByDescending(r => r.Id)
                 .ToListAsync();
 
             return View(recipes);
         }
 
-        /// <summary>
-        /// Belirli bir tarifin detay sayfasını gösterir.
-        /// GET: /Recipes/Details/5
-        /// </summary>
-        /// <param name="id">Tarifin Id değeri</param>
-        public async Task<IActionResult> Details(int? id)
+        // 🔍 Tarif Detay
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            // Tarifi tüm ilişkili verilerle birlikte getiriyoruz:
-            // - Kategori bilgisi
-            // - Etiketler
-            // - Malzemeler (RecipeIngredients) ve Ingredient detayları
             var recipe = await _context.Recipes
-                .Include(r => r.Category)
-                .Include(r => r.RecipeTags)
-                    .ThenInclude(rt => rt.Tag)
                 .Include(r => r.RecipeIngredients)
                     .ThenInclude(ri => ri.Ingredient)
+                .Include(r => r.NutritionFacts)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (recipe == null)
-            {
                 return NotFound();
-            }
 
-            // Kullanıcı giriş yapmışsa, bu tarifi favorilerine eklemiş mi kontrol et
+            // ❤️ Favori kontrolü
+            bool isFavorite = false;
+
             if (User.Identity?.IsAuthenticated == true)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-                if (currentUser != null)
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
                 {
-                    var isFavorite = await _context.FavoriteRecipes
-                        .AnyAsync(fr => fr.UserId == currentUser.Id && fr.RecipeId == recipe.Id);
-                    ViewBag.IsFavorite = isFavorite;
+                    isFavorite = await _context.FavoriteRecipes
+                        .AnyAsync(f => f.UserId == user.Id && f.RecipeId == recipe.Id);
                 }
             }
-            else
-            {
-                ViewBag.IsFavorite = false;
-            }
 
+            ViewBag.IsFavorite = isFavorite;
             return View(recipe);
         }
 
-        /// <summary>
-        /// Kullanıcının favorilerine tarif ekler.
-        /// POST: /Recipes/AddFavorite/5
-        /// </summary>
+        // ❤️ Favoriye ekle
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddFavorite(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
                 return Unauthorized();
-            }
 
-            var recipe = await _context.Recipes.FindAsync(id);
-            if (recipe == null)
+            bool exists = await _context.FavoriteRecipes
+                .AnyAsync(f => f.UserId == user.Id && f.RecipeId == id);
+
+            if (!exists)
             {
-                return NotFound();
-            }
-
-            // Zaten favoride mi kontrol et
-            var existingFavorite = await _context.FavoriteRecipes
-                .FirstOrDefaultAsync(fr => fr.UserId == currentUser.Id && fr.RecipeId == id);
-
-            if (existingFavorite == null)
-            {
-                var favorite = new FavoriteRecipe
+                _context.FavoriteRecipes.Add(new FavoriteRecipe
                 {
-                    UserId = currentUser.Id,
+                    UserId = user.Id,
                     RecipeId = id,
                     CreatedAt = DateTime.UtcNow
-                };
+                });
 
-                _context.FavoriteRecipes.Add(favorite);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Tarif favorilerinize eklendi!";
-            }
-            else
-            {
-                TempData["InfoMessage"] = "Bu tarif zaten favorilerinizde.";
             }
 
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        /// <summary>
-        /// Kullanıcının favorilerinden tarifi çıkarır.
-        /// POST: /Recipes/RemoveFavorite/5
-        /// </summary>
+        // ❌ Favoriden çıkar
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveFavorite(int id)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
                 return Unauthorized();
-            }
 
-            var favorite = await _context.FavoriteRecipes
-                .FirstOrDefaultAsync(fr => fr.UserId == currentUser.Id && fr.RecipeId == id);
+            var fav = await _context.FavoriteRecipes
+                .FirstOrDefaultAsync(f => f.UserId == user.Id && f.RecipeId == id);
 
-            if (favorite != null)
+            if (fav != null)
             {
-                _context.FavoriteRecipes.Remove(favorite);
+                _context.FavoriteRecipes.Remove(fav);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Tarif favorilerinizden çıkarıldı.";
             }
 
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        /// <summary>
-        /// Kullanıcının favori tariflerini listeler.
-        /// GET: /Recipes/Favorites
-        /// </summary>
+        // ⭐ Favoriler
         [Authorize]
         public async Task<IActionResult> Favorites()
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
                 return Unauthorized();
-            }
 
-            var favoriteRecipes = await _context.FavoriteRecipes
-                .Where(fr => fr.UserId == currentUser.Id)
-                .Include(fr => fr.Recipe)
-                    .ThenInclude(r => r.Category)
-                .Include(fr => fr.Recipe)
-                    .ThenInclude(r => r.RecipeTags)
-                        .ThenInclude(rt => rt.Tag)
-                .OrderByDescending(fr => fr.CreatedAt)
-                .Select(fr => fr.Recipe)
+            var recipes = await _context.FavoriteRecipes
+                .Where(f => f.UserId == user.Id)
+                .Include(f => f.Recipe)
+                    .ThenInclude(r => r.NutritionFacts)
+                .Select(f => f.Recipe)
                 .ToListAsync();
 
-            return View(favoriteRecipes);
+            return View(recipes);
         }
     }
 }

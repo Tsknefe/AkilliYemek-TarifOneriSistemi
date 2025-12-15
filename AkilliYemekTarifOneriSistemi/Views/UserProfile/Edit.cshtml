@@ -1,0 +1,75 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.UserProfile
+@{
+    ViewData["Title"] = "Profili Düzenle";
+}
+
+<div class="container mt-4">
+    <div class="col-md-8 offset-md-2">
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h4 class="mb-0">✏️ Profili Düzenle</h4>
+                <a asp-action="Index" class="btn btn-light btn-sm">← Profilime Dön</a>
+            </div>
+
+            <div class="card-body">
+                <form asp-controller="UserProfile" asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="UserId" />
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label>Yaş</label>
+                            <input asp-for="Age" class="form-control" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>Boy (cm)</label>
+                            <input asp-for="HeightCm" class="form-control" />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>Kilo (kg)</label>
+                            <input asp-for="WeightKg" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Cinsiyet</label>
+                        <select asp-for="Gender" class="form-select">
+                            <option value="Male">Erkek</option>
+                            <option value="Female">Kadın</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Aktivite Seviyesi</label>
+                        <select asp-for="ActivityLevel" class="form-select">
+                            <option value="sedentary">Hareketsiz</option>
+                            <option value="light">Az Hareketli</option>
+                            <option value="moderate">Orta</option>
+                            <option value="active">Aktif</option>
+                            <option value="athlete">Sporcu</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Hedef</label>
+                        <select asp-for="Goal" class="form-select">
+                            <option value="Lose">Kilo Ver</option>
+                            <option value="Maintain">Koru</option>
+                            <option value="Gain">Kilo Al</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        💾 Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
