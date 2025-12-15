@@ -1,8 +1,21 @@
 ﻿using AkilliYemekTarifOneriSistemi.Models;
 
-public interface IHealthProfileService
+namespace AkilliYemekTarifOneriSistemi.Services.Interfaces
 {
-    Task<double?> GetTargetCaloriesAsync(string userId);
-    Task<(double proteinGr, double fatGr, double carbGr)?> GetMacroTargetsAsync(string userId);
-    Task<UserProfile?> GetProfileAsync(string userId);
+    public interface IHealthProfileService
+    {
+        // Profil
+        Task<UserProfile?> GetProfileAsync(string userId);
+
+        // Kalori
+        Task<double?> GetTargetCaloriesAsync(string userId);
+        double CalculateMaintenanceCalories(UserProfile profile);
+
+        // BMI
+        double CalculateBMI(double heightCm, double weightKg);
+        string GetBMICategory(double bmi);
+
+        // Makrolar
+        Task<(double proteinGr, double fatGr, double carbGr)?> GetMacroTargetsAsync(string userId);
+    }
 }

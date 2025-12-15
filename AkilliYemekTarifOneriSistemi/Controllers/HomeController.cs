@@ -1,46 +1,33 @@
-using System.Diagnostics;
-using AkilliYemekTarifOneriSistemi.Models;
+ï»¿using AkilliYemekTarifOneriSistemi.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    // bu controller mvc tarafındaki klasik home controller
-    // react tarafındaki api controllerlardan farklı
-    // burada razor view dönen sayfalar var index privacy error gibi
     public class HomeController : Controller
     {
-        // loglama için injected gelen logger
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
-        // burası uygulamanın giriş sayfası
-        // Views/Home/Index.cshtml dosyasını döner
-        public IActionResult Index()
+        // ğŸ  Ana Sayfa
+        public async Task<IActionResult> Index()
         {
-            return View();
+            // ğŸ”¥ SON EKLENEN 3 TARÄ°F
+            var latestRecipes = await _context.Recipes
+                .OrderByDescending(r => r.Id)
+                .Take(3)
+                .ToListAsync();
+
+            return View(latestRecipes);
         }
 
-        // gizlilik sözleşmesi gibi statik sayfalar için kullanılan action
         public IActionResult Privacy()
         {
             return View();
-        }
-
-        // hata sayfası
-        // eğer bir exception yakalanırsa buraya düşer
-        // ResponseCache attribute ile cache kullanma diyoruz
-        // ErrorViewModel içine requestId set edip view'ına gönderiyoruz
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel
-            {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-            });
         }
     }
 }

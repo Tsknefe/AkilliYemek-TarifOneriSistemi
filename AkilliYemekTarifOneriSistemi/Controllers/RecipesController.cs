@@ -20,11 +20,23 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             _userManager = userManager;
         }
 
-        // 📋 Tarif Listesi
-        public async Task<IActionResult> Index()
+        // 📋 Tarif Listesi + 🔎 Arama (Title üzerinden)
+        // /Recipes veya /Recipes?q=makarna
+        [HttpGet]
+        public async Task<IActionResult> Index(string? q)
         {
-            var recipes = await _context.Recipes
-                .Include(r => r.NutritionFacts) // 🔥 toplam besin değerleri
+            IQueryable<Recipe> query = _context.Recipes
+                .Include(r => r.NutritionFacts);
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                q = q.Trim();
+
+                // Title üzerinden arama
+                query = query.Where(r => r.Title.Contains(q));
+            }
+
+            var recipes = await query
                 .OrderByDescending(r => r.Id)
                 .ToListAsync();
 
@@ -37,7 +49,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             var recipe = await _context.Recipes
                 .Include(r => r.RecipeIngredients)
                     .ThenInclude(ri => ri.Ingredient)
-                .Include(r => r.NutritionFacts) // 🔥 ÇOK ÖNEMLİ
+                .Include(r => r.NutritionFacts)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (recipe == null)
@@ -52,14 +64,11 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 if (user != null)
                 {
                     isFavorite = await _context.FavoriteRecipes
-                        .AnyAsync(f =>
-                            f.UserId == user.Id &&
-                            f.RecipeId == recipe.Id);
+                        .AnyAsync(f => f.UserId == user.Id && f.RecipeId == recipe.Id);
                 }
             }
 
             ViewBag.IsFavorite = isFavorite;
-
             return View(recipe);
         }
 
@@ -74,9 +83,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 return Unauthorized();
 
             bool exists = await _context.FavoriteRecipes
-                .AnyAsync(f =>
-                    f.UserId == user.Id &&
-                    f.RecipeId == id);
+                .AnyAsync(f => f.UserId == user.Id && f.RecipeId == id);
 
             if (!exists)
             {
@@ -104,9 +111,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
                 return Unauthorized();
 
             var fav = await _context.FavoriteRecipes
-                .FirstOrDefaultAsync(f =>
-                    f.UserId == user.Id &&
-                    f.RecipeId == id);
+                .FirstOrDefaultAsync(f => f.UserId == user.Id && f.RecipeId == id);
 
             if (fav != null)
             {
@@ -128,7 +133,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             var recipes = await _context.FavoriteRecipes
                 .Where(f => f.UserId == user.Id)
                 .Include(f => f.Recipe)
-                    .ThenInclude(r => r.NutritionFacts) // 🔥
+                    .ThenInclude(r => r.NutritionFacts)
                 .Select(f => f.Recipe)
                 .ToListAsync();
 

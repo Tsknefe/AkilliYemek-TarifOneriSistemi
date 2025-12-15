@@ -5,41 +5,74 @@
 }
 
 <div class="container mt-4">
+
+    <!-- SAYFA BAŞLIĞI -->
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="display-5">📅 Haftalık Planlarım</h1>
-                <p class="lead text-muted">Yemek planlarınızı yönetin</p>
+                <p class="lead text-muted">Manuel olarak oluşturduğunuz yemek planlarını yönetin</p>
             </div>
-            <a href="@Url.Action("Create", "WeeklyPlans")" class="btn btn-primary">
+            <a asp-controller="WeeklyPlans"
+               asp-action="Create"
+               class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Yeni Plan Oluştur
             </a>
         </div>
     </div>
 
+    <!-- BİLGİ NOTU -->
+    <div class="alert alert-secondary mb-4">
+        <strong>Bilgi:</strong>
+        Bu sayfada <b>manuel olarak</b> oluşturduğunuz haftalık planlar listelenir.
+        Otomatik plan oluşturmak için
+        <a asp-controller="WeeklyPlan"
+           asp-action="Index"
+           class="alert-link">
+            buraya tıklayın
+        </a>.
+    </div>
+
+    <!-- BAŞARI MESAJI -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     }
 
+    <!-- BOŞ DURUM -->
     @if (Model == null || !Model.Any())
     {
         <div class="alert alert-info" role="alert">
             <h4 class="alert-heading">Henüz plan yok!</h4>
-            <p>Henüz oluşturduğunuz bir haftalık plan bulunmamaktadır. "Yeni Plan Oluştur" butonuna tıklayarak ilk planınızı oluşturabilirsiniz.</p>
+            <p>
+                Henüz oluşturduğunuz bir haftalık plan bulunmamaktadır.
+                <b>Yeni Plan Oluştur</b> butonuna tıklayarak ilk planınızı oluşturabilirsiniz.
+            </p>
         </div>
     }
     else
     {
+        <!-- PLAN KARTLARI -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
             @foreach (var plan in Model)
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm">
+
                         <div class="card-body">
+                            @* En yeni planı vurgula *@
+                            @if (plan == Model.First())
+                            {
+                                <span class="badge bg-success mb-2">Aktif Plan</span>
+                            }
+
                             <h5 class="card-title">
                                 @if (!string.IsNullOrEmpty(plan.Title))
                                 {
@@ -50,28 +83,44 @@
                                     <text>Haftalık Plan</text>
                                 }
                             </h5>
+
                             <p class="card-text">
-                                <strong>Başlangıç:</strong> @plan.StartDate.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))<br>
-                                <strong>Bitiş:</strong> @plan.StartDate.AddDays(6).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
-                            </p>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <div class="d-flex justify-content-between">
-                                <a href="@Url.Action("Details", "WeeklyPlans", new { id = plan.Id })" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i> Görüntüle
-                                </a>
-                                <a href="@Url.Action("Delete", "WeeklyPlans", new { id = plan.Id })" class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Sil
-                                </a>
-                            </div>
-                        </div>
+                                <strong>Başlangıç:</strong>
+                                @plan.StartDate.ToString("dd MMMM yyyy",
+                                new System.Globalization.CultureInfo("tr-TR"))<br />
+
+                        <strong>Bitiş:</strong>
+                        @plan.StartDate.AddDays(6).ToString("dd MMMM yyyy",
+                                                new System.Globalization.CultureInfo("tr-TR"))
+                    </p>
+                </div>
+
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <a asp-controller="WeeklyPlans"
+                           asp-action="Details"
+                           asp-route-id="@plan.Id"
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i> Görüntüle
+                        </a>
+
+                        <a asp-controller="WeeklyPlans"
+                           asp-action="Delete"
+                           asp-route-id="@plan.Id"
+                           class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Sil
+                        </a>
                     </div>
                 </div>
-            }
+
+            </div>
+        </div>
+                }
+
         </div>
     }
 </div>
 
 <!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">

@@ -1,0 +1,51 @@
+﻿@model AkilliYemekTarifOneriSistemi.Models.UserProfile
+@{
+    ViewData["Title"] = "Profilim";
+}
+
+<div class="container mt-4">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between">
+            <h4 class="mb-0">👤 Profil Özeti</h4>
+            <a asp-action="Edit" class="btn btn-light btn-sm">✏️ Düzenle</a>
+        </div>
+
+        <div class="card-body">
+            <div class="row text-center">
+
+                <div class="col-md-3">
+                    <h6>BMI</h6>
+                    <span class="badge bg-primary fs-5">@ViewBag.BMI</span>
+                </div>
+
+                <div class="col-md-3">
+                    <h6>Durum</h6>
+                    <span class="badge bg-info fs-5">@ViewBag.BMICategory</span>
+                </div>
+
+                <div class="col-md-3">
+                    <h6>Bakım Kalorisi</h6>
+                    <span class="badge bg-warning fs-5">
+                        @ViewBag.MaintenanceCalories kcal
+                    </span>
+                </div>
+
+                <div class="col-md-3">
+                    <h6>Hedef Kalori</h6>
+                    <span class="badge bg-danger fs-5">
+                        @ViewBag.TargetCalories kcal
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
