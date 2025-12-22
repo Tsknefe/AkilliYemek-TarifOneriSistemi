@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Models;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +15,14 @@ namespace AkilliYemekTarifOneriSistemi.Controllers.Admin
             _ingredientService = ingredientService;
         }
 
-        // LIST
+        
         public async Task<IActionResult> Index(string? search)
         {
             var ingredients = await _ingredientService.GetAllAsync(search);
             return View(ingredients);
         }
 
-        // CREATE
+        
         public IActionResult Create()
         {
             return View();
@@ -40,7 +40,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
-        // EDIT
+        
         public async Task<IActionResult> Edit(int id)
         {
             var ingredient = await _ingredientService.GetByIdAsync(id);
@@ -62,7 +62,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
-        // DELETE
+        
         public async Task<IActionResult> Delete(int id)
         {
             var ingredient = await _ingredientService.GetByIdAsync(id);

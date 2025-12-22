@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using AkilliYemekTarifOneriSistemi.Models;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Interfaces

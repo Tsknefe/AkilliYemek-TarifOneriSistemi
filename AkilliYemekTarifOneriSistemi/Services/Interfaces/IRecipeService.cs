@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Models;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Interfaces
 {
@@ -9,5 +9,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Interfaces
         Task<Recipe> CreateAsync(Recipe recipe);
         Task<Recipe?> UpdateAsync(Recipe recipe);
         Task<bool> DeleteAsync(int id);
+        Task<List<Recipe>> GetAllWithCategoryAsync(string? search = null);
+
     }
 }

@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
 using AkilliYemekTarifOneriSistemi.Services.Helpers;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
@@ -19,7 +19,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _nutritionService = nutritionService;
         }
 
-        // 📋 Bir tarifin içindeki tüm malzemeler
+        
         public async Task<List<RecipeIngredient>> GetByRecipeIdAsync(int recipeId)
         {
             return await _context.RecipeIngredients
@@ -28,7 +28,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 .ToListAsync();
         }
 
-        // 🔍 Tek bir tarif–malzeme kaydı
+        
         public async Task<RecipeIngredient?> GetByIdAsync(int id)
         {
             return await _context.RecipeIngredients
@@ -36,7 +36,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 .FirstOrDefaultAsync(ri => ri.Id == id);
         }
 
-        // ➕ Tarife yeni malzeme ekle
+        
         public async Task<RecipeIngredient> AddAsync(
             int recipeId,
             int ingredientId,
@@ -45,7 +45,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
         {
             var ingredient = await _context.Ingredients.FindAsync(ingredientId);
             if (ingredient == null)
-                throw new InvalidOperationException("Ingredient bulunamadı");
+                throw new InvalidOperationException("Ingredient bulunamad�");
 
             double grams = UnitConverter.ToGram(quantity, unit, ingredient.Name);
 
@@ -61,13 +61,13 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _context.RecipeIngredients.Add(entity);
             await _context.SaveChangesAsync();
 
-            // 🔄 Tarifin toplam besin değerlerini güncelle
+            
             await _nutritionService.SaveNutritionForRecipeAsync(recipeId);
 
             return entity;
         }
 
-        // ✏️ Tarif içindeki malzemeyi güncelle
+        
         public async Task<RecipeIngredient?> UpdateAsync(
             int id,
             int ingredientId,
@@ -83,7 +83,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 
             var ingredient = await _context.Ingredients.FindAsync(ingredientId);
             if (ingredient == null)
-                throw new InvalidOperationException("Ingredient bulunamadı");
+                throw new InvalidOperationException("Ingredient bulunamad�");
 
             double grams = UnitConverter.ToGram(quantity, unit, ingredient.Name);
 
@@ -99,7 +99,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             return entity;
         }
 
-        // ❌ Tariften malzeme sil
+        
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _context.RecipeIngredients.FindAsync(id);
@@ -116,7 +116,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             return true;
         }
 
-        // 🔥 TEK MALZEMENİN KALORİSİNİ HESAPLA (API)
+        
         public async Task<double> CalculateCaloriesAsync(int recipeIngredientId)
         {
             var ri = await _context.RecipeIngredients
@@ -126,7 +126,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             if (ri == null || ri.Ingredient == null)
                 return 0;
 
-            // API için İngilizce isim ZORUNLU
+            
             if (string.IsNullOrWhiteSpace(ri.Ingredient.EnglishName))
                 return 0;
 
@@ -138,7 +138,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             if (nutrition == null || nutrition.Calories <= 0)
                 return 0;
 
-            // 100g başına → kullanılan gram
+            
             double totalCalories =
                 (nutrition.Calories / 100.0) * ri.CalculatedGrams;
 

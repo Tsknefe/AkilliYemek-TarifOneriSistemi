@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
@@ -9,14 +9,13 @@
 </head>
 <body>
 
-    <!-- ÜST BAR -->
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid">
-            <span class="navbar-brand">🍽️ Admin Panel</span>
+            <span class="navbar-brand"> Admin Panel</span>
             <a class="btn btn-outline-light"
                asp-controller="Home"
                asp-action="Index">
-                Siteye Dön
+                Siteye D�n
             </a>
         </div>
     </nav>
@@ -25,15 +24,15 @@
     <div class="container-fluid">
         <div class="row">
 
-            <!-- SOL MENÜ -->
-            <div class="col-2 bg-light min-vh-100 p-3">
+            <!-- SOL MEN� -->
+            <div class="col-12 col-md-2 bg-light min-vh-100 p-3">
                 <ul class="nav flex-column gap-2">
 
                     <li class="nav-item">
                         <a class="nav-link fw-bold"
                            asp-controller="Admin"
                            asp-action="Index">
-                            📊 Dashboard
+                             Dashboard
                         </a>
                     </li>
 
@@ -41,7 +40,7 @@
                         <a class="nav-link"
                            asp-controller="AdminRecipes"
                            asp-action="Index">
-                            🍽️ Tarifler
+                             Tarifler
                         </a>
                     </li>
 
@@ -49,22 +48,22 @@
                         <a class="nav-link"
                            asp-controller="AdminIngredients"
                            asp-action="Index">
-                            🥕 Malzemeler
+                             Malzemeler
                         </a>
                     </li>
 
                 </ul>
             </div>
 
-            <!-- İÇERİK -->
-            <div class="col-10 p-4">
+            <!-- ��ER�K -->
+            <div class="col-12 col-md-10 p-4">
                 @RenderBody()
             </div>
 
         </div>
     </div>
 
-    <!-- SCRIPT SECTION (ÇOK ÖNEMLİ) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

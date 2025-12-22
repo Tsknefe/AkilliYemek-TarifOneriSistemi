@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Services.Interfaces;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -19,11 +19,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers.Api
 
         private string? GetUserId() =>
             User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        /// <summary>
-        /// Giriş yapmış kullanıcı için 7 günlük kişisel yemek planı üretir.
-        /// </summary>
-        /// <param name="startDate">Opsiyonel; boş ise bugünden başlar.</param>
+        
         [HttpGet("generate")]
         public async Task<IActionResult> Generate([FromQuery] DateTime? startDate = null)
         {
@@ -33,7 +29,7 @@ namespace AkilliYemekTarifOneriSistemi.Controllers.Api
 
             var plan = await _weeklyPlanService.GenerateWeeklyPlanAsync(userId, startDate);
             if (plan == null)
-                return BadRequest("Profiliniz veya uygun tarif bulunamadı. Lütfen UserProfile bilgilerinizin dolu olduğundan emin olun.");
+                return BadRequest("Profiliniz veya uygun tarif bulunamad�. L�tfen UserProfile bilgilerinizin dolu oldu�undan emin olun.");
 
             return Ok(plan);
         }

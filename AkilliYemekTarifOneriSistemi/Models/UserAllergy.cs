@@ -1,4 +1,4 @@
-﻿namespace AkilliYemekTarifOneriSistemi.Models
+namespace AkilliYemekTarifOneriSistemi.Models
 {
     public class UserAllergy
     {

@@ -1,19 +1,19 @@
-ï»¿@model List<AkilliYemekTarifOneriSistemi.Models.Ingredient>
+@model List<AkilliYemekTarifOneriSistemi.Models.Ingredient>
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>ðŸ¥• Malzemeler</h2>
+<h2> Malzemeler</h2>
 
-<a asp-action="Create" class="btn btn-success mb-3">âž• Yeni Malzeme</a>
+<a asp-action="Create" class="btn btn-success mb-3"> Yeni Malzeme</a>
 
 <table class="table table-bordered">
     <thead>
         <tr>
             <th>Ad</th>
-            <th>Ä°ngilizce Ad</th>
-            <th>Ä°ÅŸlemler</th>
+            <th>Ýngilizce Ad</th>
+            <th>Ýþlemler</th>
         </tr>
     </thead>
     <tbody>
@@ -23,7 +23,7 @@
                 <td>@i.Name</td>
                 <td>@i.EnglishName</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@i.Id" class="btn btn-warning btn-sm">DÃ¼zenle</a>
+                    <a asp-action="Edit" asp-route-id="@i.Id" class="btn btn-warning btn-sm">Düzenle</a>
                     <a asp-action="Delete" asp-route-id="@i.Id" class="btn btn-danger btn-sm">Sil</a>
                 </td>
             </tr>

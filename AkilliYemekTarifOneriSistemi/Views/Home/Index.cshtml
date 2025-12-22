@@ -1,4 +1,4 @@
-ï»¿@model List<AkilliYemekTarifOneriSistemi.Models.Recipe>
+@model List<AkilliYemekTarifOneriSistemi.Models.Recipe>
 
 @{
     ViewData["Title"] = "Ana Sayfa";
@@ -22,7 +22,7 @@
         height: 200px;
         margin-bottom: 20px;
         margin-left: -10px; /* sola */
-        margin-top: -20px; /* yukarÄ± */
+        margin-top: -20px; /* yukarý */
     }
 
     .hero-content h1 {
@@ -87,24 +87,24 @@
                 <img src="~/images/3logo.png" class="hero-logo" />
 
                 <h1 class="fw-bold display-5 mb-3">
-                    AkÄ±llÄ± Yemek<br />
-                    Tarif Ã–neri Sistemi
+                    Akýllý Yemek<br />
+                    Tarif Öneri Sistemi
                 </h1>
 
                 <p class="opacity-75 fs-5 mb-4">
-                    Elindeki malzemelere gÃ¶re tarif Ã¶nerileri,
-                    kiÅŸisel beslenme hedefleri ve haftalÄ±k planlama
+                    Elindeki malzemelere göre tarif önerileri,
+                    kiþisel beslenme hedefleri ve haftalýk planlama
                     tek bir yerde.
                 </p>
 
                 <a asp-controller="Recipes"
                    asp-action="Index"
                    class="btn btn-light btn-lg rounded-pill px-5">
-                    Tarifleri KeÅŸfet
+                    Tarifleri Keþfet
                 </a>
             </div>
 
-            <!-- SAÄž -->
+            <!-- SAÐ -->
             <div class="col-lg-6">
                 <div class="hero-image-wrapper shadow-lg">
                     <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836" />
@@ -115,7 +115,7 @@
     </div>
 </section>
 
-<!-- ================= SON EKLENEN TARÄ°FLER ================= -->
+<!-- ================= SON EKLENEN TARÝFLER ================= -->
 <section class="mb-5">
     <div class="container">
 
@@ -125,7 +125,7 @@
             <a asp-controller="Recipes"
                asp-action="Index"
                class="btn btn-outline-secondary rounded-pill">
-                TÃ¼mÃ¼nÃ¼ GÃ¶r
+                Tümünü Gör
             </a>
         </div>
 
@@ -133,7 +133,7 @@
 
             @if (!Model.Any())
             {
-                <p class="text-muted">HenÃ¼z tarif eklenmedi.</p>
+                <p class="text-muted">Henüz tarif eklenmedi.</p>
             }
             else
             {
@@ -160,7 +160,7 @@
                                    asp-action="Details"
                                    asp-route-id="@recipe.Id"
                                    class="btn btn-primary rounded-pill mt-auto">
-                                    DetayÄ± GÃ¶r
+                                    Detayý Gör
                                 </a>
                             </div>
 
@@ -178,11 +178,11 @@
     <div class="container text-center">
 
         <h2 class="fw-bold mb-3">
-            BugÃ¼n Ne PiÅŸirsem?
+            Bugün Ne Piþirsem?
         </h2>
 
         <p class="opacity-75 mb-4">
-            Porsiyon ile karar vermek artÄ±k Ã§ok daha kolay.
+            Porsiyon ile karar vermek artýk çok daha kolay.
         </p>
 
         <a asp-controller="Recipes"

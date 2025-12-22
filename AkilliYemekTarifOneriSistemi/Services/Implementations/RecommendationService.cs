@@ -1,13 +1,11 @@
-﻿using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
+using AkilliYemekTarifOneriSistemi.Services.DietRules;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 {
-    // bu servis kullanıcının malzemelerine diyetine kalorisine hedeflerine göre
-    // en uygun tarifleri hesaplayan kısım
-    // hem eski düz manuel filtreleme var hem de kullanıcı profiline göre çalışan gelişmiş sürüm var
     public class RecommendationService : IRecommendationService
     {
         private readonly ApplicationDbContext _context;
@@ -24,99 +22,123 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _allergyService = allergyService;
         }
 
-        // bu eski yöntem dışarıdan parametre verilip api üzerinden direkt kullanılabiliyor
-        // yani kullanıcı profiline göre değil tamamen requestte gelen verilere göre öneri yapıyor
-        public async Task<List<RecommendationResult>> RecommendAsync(
+        public Task<List<RecommendationResult>> RecommendAsync(
             List<int> ingredientIds,
             int? maxCookingTime,
             double? targetCalories,
             string? dietType,
             int top)
         {
-            // tüm tarifleri malzemeleri ve besin değerleri ile birlikte çek
-            var query = _context.Recipes
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
+            return RecommendAsync(ingredientIds, maxCookingTime, targetCalories, dietType, top, mealType: null);
+        }
+
+        public Task<List<RecommendationResult>> RecommendForUserAsync(
+            string userId,
+            List<int> ingredientIds,
+            int? maxCookingTime,
+            int top)
+        {
+            return RecommendForUserAsync(userId, ingredientIds, maxCookingTime, top, mealType: null);
+        }
+
+        
+        
+        
+        public async Task<List<RecommendationResult>> RecommendAsync(
+            List<int> ingredientIds,
+            int? maxCookingTime,
+            double? targetCalories,
+            string? dietType,
+            int top,
+            string? mealType)
+        {
+            ingredientIds ??= new List<int>();
+            if (top <= 0) top = 10;
+
+            var diet = DietTypeNormalizer.Normalize(dietType);
+            var dietRestricted = DietTypeNormalizer.IsRestricted(diet);
+            var mt = NormalizeMealType(mealType);
+
+            var recipes = await _context.Recipes
+                .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Ingredient)
                 .Include(r => r.NutritionFacts)
-                .AsQueryable();
+                .ToListAsync();
 
-            // diyet tipi seçilmişse sadece ona uyanları getir
-            if (!string.IsNullOrWhiteSpace(dietType))
-            {
-                var d = dietType.Trim().ToLower();
-                query = query.Where(r => r.DietType.ToLower() == d);
-            }
-
-            var recipes = await query.ToListAsync();
             var results = new List<RecommendationResult>();
 
-            // her tarif için skor hesapla
             foreach (var recipe in recipes)
             {
+                
+                if (dietRestricted)
+                {
+                    var texts = BuildDietTexts(recipe);
+                    if (!DietRuleEngine.MatchesDiet(diet, texts))
+                        continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(mt))
+                {
+                    if (!HasMealTag(recipe.MealTags, mt))
+                        continue;
+                }
+
                 var res = CalculateScore(
                     recipe,
                     ingredientIds,
                     maxCookingTime,
                     targetCalories,
-                    dietType,
                     macroTargets: null,
-                    profileDietType: null);
+                    mealType: mt
+                );
 
                 if (res.Score > 0)
                     results.Add(res);
             }
 
-            // en yüksek skor alanları getir
             return results
                 .OrderByDescending(r => r.Score)
                 .Take(top)
                 .ToList();
         }
 
-        // bu yeni yöntem kullanıcı bilgilerini tamamen hesaba katarak çalışıyor
-        // yani yaş boy kilo hedef aktivite seviyesi alerji diyet tipi hepsi dahil
+        
+        
+        
         public async Task<List<RecommendationResult>> RecommendForUserAsync(
             string userId,
             List<int> ingredientIds,
             int? maxCookingTime,
-            int top)
+            int top,
+            string? mealType)
         {
-            // kullanıcı profilini çekiyoruz
-            var profile = await _healthProfileService.GetProfileAsync(userId);
+            ingredientIds ??= new List<int>();
+            if (top <= 0) top = 10;
 
-            // günlük ortalama hedef kalori
+            
+            var profile = await _healthProfileService.GetOrCreateProfileAsync(userId);
+
             var targetCalories = await _healthProfileService.GetTargetCaloriesAsync(userId);
-
-            // protein yağ karbonhidrat hedefleri
             var macroTargets = await _healthProfileService.GetMacroTargetsAsync(userId);
 
-            // kullanıcının profilindeki diyet türü mesela vegan glutenfree falan
-            string? profileDietType = profile?.DietType;
+            var profileDietType = DietTypeNormalizer.Normalize(profile?.DietType);
+            var dietRestricted = DietTypeNormalizer.IsRestricted(profileDietType);
 
-            // alerjileri alıyoruz
-            var allergicIngredientIds = await _allergyService.GetUserAllergyIngredientIdsAsync(userId);
+            var mt = NormalizeMealType(mealType);
 
-            // tarifleri getir
-            var query = _context.Recipes
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
+            var allergicIngredientIds =
+                await _allergyService.GetUserAllergyIngredientIdsAsync(userId) ?? new List<int>();
+
+            var recipes = await _context.Recipes
+                .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Ingredient)
                 .Include(r => r.NutritionFacts)
-                .AsQueryable();
+                .ToListAsync();
 
-            // kullanıcı vegan seçtiyse sadece vegan tarifler gelsin
-            if (!string.IsNullOrWhiteSpace(profileDietType))
-            {
-                var dt = profileDietType.Trim().ToLower();
-                query = query.Where(r => r.DietType.ToLower() == dt);
-            }
-
-            var recipes = await query.ToListAsync();
             var results = new List<RecommendationResult>();
 
             foreach (var recipe in recipes)
             {
-                // tarif içinde kullanıcının alerjik olduğu malzeme varsa direkt ele
-                if (recipe.RecipeIngredients != null && allergicIngredientIds.Any())
+                
+                if (recipe.RecipeIngredients != null && recipe.RecipeIngredients.Any() && allergicIngredientIds.Any())
                 {
                     bool hasAllergen = recipe.RecipeIngredients
                         .Any(ri => allergicIngredientIds.Contains(ri.IngredientId));
@@ -125,15 +147,35 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                         continue;
                 }
 
-                // skor hesaplama
+                
+                if (dietRestricted)
+                {
+                    var texts = BuildDietTexts(recipe);
+                    if (!DietRuleEngine.MatchesDiet(profileDietType, texts))
+                        continue;
+                }
+
+                
+                if (!string.IsNullOrWhiteSpace(mt))
+                {
+                    if (!HasMealTag(recipe.MealTags, mt))
+                        continue;
+                }
+
+                
                 var res = CalculateScore(
                     recipe,
                     ingredientIds,
                     maxCookingTime,
                     targetCalories,
-                    dietType: profileDietType,
                     macroTargets: macroTargets,
-                    profileDietType: profileDietType);
+                    mealType: mt
+                );
+
+                
+                var seed = HashCode.Combine(userId, recipe.Id, DateTime.Today);
+                var rng = new Random(seed);
+                res.Score += rng.NextDouble() * 0.03;
 
                 if (res.Score > 0)
                     results.Add(res);
@@ -145,37 +187,65 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 .ToList();
         }
 
-        // bu fonksiyon bir tarifin ne kadar uygun olduğunu hesaplıyor
-        // bütün puanlamanın mantığı burada dönüyor
+        
+        
+        
+        private static List<string> BuildDietTexts(Recipe recipe)
+        {
+            var texts = new List<string>();
+
+            
+            if (recipe.RecipeIngredients != null)
+            {
+                foreach (var ri in recipe.RecipeIngredients)
+                {
+                    if (ri?.Ingredient == null) continue;
+
+                    if (!string.IsNullOrWhiteSpace(ri.Ingredient.Name))
+                        texts.Add(ri.Ingredient.Name);
+
+                    if (!string.IsNullOrWhiteSpace(ri.Ingredient.EnglishName))
+                        texts.Add(ri.Ingredient.EnglishName);
+                }
+            }
+
+            
+            if (!string.IsNullOrWhiteSpace(recipe.Title)) texts.Add(recipe.Title);
+            if (!string.IsNullOrWhiteSpace(recipe.Name)) texts.Add(recipe.Name);
+            if (!string.IsNullOrWhiteSpace(recipe.Description)) texts.Add(recipe.Description);
+
+            return texts;
+        }
+
+        
+        
+        
         private RecommendationResult CalculateScore(
             Recipe recipe,
             List<int> ingredientIds,
             int? maxCookingTime,
             double? targetCalories,
-            string? dietType,
             (double proteinGr, double fatGr, double carbGr)? macroTargets,
-            string? profileDietType)
+            string? mealType)
         {
-            ingredientIds = ingredientIds?.Distinct().ToList() ?? new List<int>();
+            ingredientIds ??= new List<int>();
+            ingredientIds = ingredientIds.Distinct().ToList();
 
-            // kullanıcının elindeki malzemeler tarifle ne kadar örtüşüyor
+            
             double ingredientMatch = 0;
             if (recipe.RecipeIngredients != null && recipe.RecipeIngredients.Any() && ingredientIds.Any())
             {
-                var recipeIngIds = recipe.RecipeIngredients.Select(ri => ri.IngredientId).Distinct();
+                var recipeIngIds = recipe.RecipeIngredients.Select(ri => ri.IngredientId).Distinct().ToList();
                 var common = recipeIngIds.Intersect(ingredientIds).Count();
-                var total = recipeIngIds.Count();
+                var total = recipeIngIds.Count;
                 ingredientMatch = total > 0 ? (double)common / total : 0;
             }
 
-            // tarifin süresi max süreye göre ne kadar uyuyor
+            
             double timeFit = 1;
             if (maxCookingTime.HasValue && maxCookingTime.Value > 0)
             {
-                if (recipe.CookingTime <= maxCookingTime.Value)
-                {
-                    timeFit = 1;
-                }
+                if (recipe.CookingTime <= maxCookingTime.Value) timeFit = 1;
                 else
                 {
                     var diff = recipe.CookingTime - maxCookingTime.Value;
@@ -183,7 +253,12 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 }
             }
 
-            // tarifin kalorisi hedef kaloriye ne kadar yakın
+            
+            double mealFit = 1;
+            if (!string.IsNullOrWhiteSpace(mealType))
+                mealFit = HasMealTag(recipe.MealTags, mealType) ? 1 : 0;
+
+            
             double calorieFit = 0;
             if (targetCalories.HasValue && targetCalories.Value > 0 &&
                 recipe.NutritionFacts != null && recipe.NutritionFacts.Calories > 0)
@@ -193,23 +268,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 calorieFit = 1 / (1 + ratio);
             }
 
-            // kişinin seçtiği diyet tipi ile tarif uyumlu mu
-            double dietFit = 1;
-            if (!string.IsNullOrWhiteSpace(dietType))
-            {
-                var dt = dietType.Trim().ToLower();
-                dietFit = recipe.DietType?.Trim().ToLower() == dt ? 1 : 0;
-            }
-
-            // profilindeki diyet türüne ekstra bonus
-            double profileDietFit = 1;
-            if (!string.IsNullOrWhiteSpace(profileDietType))
-            {
-                var pdt = profileDietType.Trim().ToLower();
-                profileDietFit = recipe.DietType?.Trim().ToLower() == pdt ? 1 : 0.5;
-            }
-
-            // makro hedeflerine göre uyumluluk
+            
             double macroFit = 0;
             if (macroTargets.HasValue &&
                 recipe.NutritionFacts != null &&
@@ -227,21 +286,19 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 macroFit = 1 / (1 + avgDiff);
             }
 
-            // ağırlıklar
+            
             const double wIngredient = 0.30;
             const double wTime = 0.10;
             const double wCalorie = 0.20;
-            const double wDiet = 0.10;
-            const double wProfileDiet = 0.10;
             const double wMacro = 0.20;
+            const double wMeal = 0.25;
 
             double score =
                   ingredientMatch * wIngredient
                 + timeFit * wTime
                 + calorieFit * wCalorie
-                + dietFit * wDiet
-                + profileDietFit * wProfileDiet
-                + macroFit * wMacro;
+                + macroFit * wMacro
+                + mealFit * wMeal;
 
             return new RecommendationResult
             {
@@ -250,10 +307,34 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 IngredientMatch = ingredientMatch,
                 TimeFit = timeFit,
                 CalorieFit = calorieFit,
-                DietFit = dietFit,
                 MacroFit = macroFit,
-                ProfileDietFit = profileDietFit
+                MealFit = mealFit,
+
+                
+                DietFit = 1,
+                ProfileDietFit = 1
             };
+        }
+
+        
+        
+        
+        private static string NormalizeMealType(string? mealType)
+        {
+            if (string.IsNullOrWhiteSpace(mealType)) return "";
+            return mealType.Trim().ToLowerInvariant();
+        }
+
+        private static bool HasMealTag(string? mealTags, string mealType)
+        {
+            var mt = NormalizeMealType(mealType);
+            if (string.IsNullOrWhiteSpace(mt)) return true;
+
+            var tags = (mealTags ?? "")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(x => x.ToLowerInvariant());
+
+            return tags.Contains(mt);
         }
     }
 }

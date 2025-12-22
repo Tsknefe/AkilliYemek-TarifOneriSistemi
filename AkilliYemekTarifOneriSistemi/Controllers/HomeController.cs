@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +13,8 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             _context = context;
         }
 
-        // 🏠 Ana Sayfa
         public async Task<IActionResult> Index()
         {
-            // 🔥 SON EKLENEN 3 TARİF
             var latestRecipes = await _context.Recipes
                 .OrderByDescending(r => r.Id)
                 .Take(3)

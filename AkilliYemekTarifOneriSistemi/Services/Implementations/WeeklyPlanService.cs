@@ -1,109 +1,244 @@
-﻿using AkilliYemekTarifOneriSistemi.Services.Interfaces;
+using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
+using AkilliYemekTarifOneriSistemi.Services.DietRules;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 {
-    // bu servis haftalık beslenme planını oluşturan kısım
-    // yani kullanıcının profilini baz alıp 7 gün 3 öğün olacak şekilde plan çıkarıyor
-    // arka tarafta öneri motorunu kullanıyor çünkü hangi tarifin uygun olduğuna karar verip çekmek gerekiyor
     public class WeeklyPlanService : IWeeklyPlanService
     {
+        private readonly ApplicationDbContext _context;
         private readonly IHealthProfileService _healthProfileService;
         private readonly IRecommendationService _recommendationService;
 
         public WeeklyPlanService(
+            ApplicationDbContext context,
             IHealthProfileService healthProfileService,
             IRecommendationService recommendationService)
         {
+            _context = context;
             _healthProfileService = healthProfileService;
             _recommendationService = recommendationService;
         }
 
+        
         public async Task<WeeklyPlanDto?> GenerateWeeklyPlanAsync(string userId, DateTime? startDate = null)
         {
-            // burada ilk olarak kullanıcının günlük hedef kalorisine bakıyoruz
-            // çünkü planın temeli buna göre kuruluyor
+            var profile = await _healthProfileService.GetOrCreateProfileAsync(userId);
+            Console.WriteLine($"[WeeklyPlan] profileExists={(profile != null)} userId={userId}");
+
             var targetCalories = await _healthProfileService.GetTargetCaloriesAsync(userId);
+            Console.WriteLine($"[WeeklyPlan] targetCalories={(targetCalories.HasValue ? targetCalories.Value.ToString() : "NULL")}");
 
-            // kullanıcı profilini doldurmamışsa değer dönmez
-            // bu durumda plan oluşturamıyoruz
             if (!targetCalories.HasValue)
+            {
+                Console.WriteLine("[WeeklyPlan] targetCalories is NULL -> returning null");
                 return null;
+            }
 
-            double dailyTarget = targetCalories.Value;
+            
+            var currentDiet = DietTypeNormalizer.Normalize(profile?.DietType);
 
-            // şimdi kullanıcının profiline göre en uygun tarifleri çekiyoruz
-            // alerji diyeti hedef kalorisi makroları hepsi recommendation service içinde zaten değerlendiriliyor
-            // 7 gün 3 öğün için toplam 21 tarif yeterli oluyor
-            var recommended = await _recommendationService.RecommendForUserAsync(
+            
+            var generalRecommended = await _recommendationService.RecommendForUserAsync(
                 userId,
-                ingredientIds: new List<int>(), // burada evdeki malzeme kısıtlaması yok tamamen profil üzerinden gidiyoruz
+                ingredientIds: new List<int>(),
                 maxCookingTime: null,
-                top: 21);
+                top: 120);
 
-            // hiçbir tarif dönmediyse planı kuramayız
-            if (recommended.Count == 0)
+            Console.WriteLine($"[WeeklyPlan] generalRecommendedCount={generalRecommended.Count}");
+
+            if (generalRecommended.Count == 0)
+            {
+                Console.WriteLine("[WeeklyPlan] generalRecommended is 0 -> returning null");
                 return null;
+            }
 
-            // burada planın başlangıç tarihini belirliyoruz
-            // dışarıdan tarih verilmişse onu kullanıyoruz
-            // verilmemişse bugünü alıyoruz
+            
+            var breakfastRecommended = await _recommendationService.RecommendForUserAsync(
+                userId,
+                ingredientIds: new List<int>(),
+                maxCookingTime: null,
+                top: 60,
+                mealType: "breakfast");
+
+            var lunchRecommended = await _recommendationService.RecommendForUserAsync(
+                userId,
+                ingredientIds: new List<int>(),
+                maxCookingTime: null,
+                top: 60,
+                mealType: "lunch");
+
+            var dinnerRecommended = await _recommendationService.RecommendForUserAsync(
+                userId,
+                ingredientIds: new List<int>(),
+                maxCookingTime: null,
+                top: 60,
+                mealType: "dinner");
+
+            Console.WriteLine($"[WeeklyPlan] breakfast={breakfastRecommended.Count} lunch={lunchRecommended.Count} dinner={dinnerRecommended.Count}");
+
+            
+            if (breakfastRecommended.Count == 0) breakfastRecommended = generalRecommended;
+            if (lunchRecommended.Count == 0) lunchRecommended = generalRecommended;
+            if (dinnerRecommended.Count == 0) dinnerRecommended = generalRecommended;
+
             var start = (startDate ?? DateTime.Today).Date;
 
-            // haftalık plan objesini oluşturuyoruz
-            // bitiş tarihi 7 günün sonu olacak şekilde hesaplanıyor
             var weeklyPlan = new WeeklyPlanDto
             {
                 StartDate = start,
                 EndDate = start.AddDays(6),
-                TargetDailyCalories = dailyTarget
+                TargetDailyCalories = targetCalories.Value,
             };
 
-            // sabit öğün tiplerimiz
-            string[] mealTypes = new[] { "Kahvaltı", "Öğle", "Akşam" };
+            int bIndex = 0, lIndex = 0, dIndex = 0;
 
-            // recommended listesinden sırayla tarif seçmek için kullanılan index
-            int recipeIndex = 0;
-
-            // şimdi 7 günlük planı oluşturuyoruz
             for (int dayOffset = 0; dayOffset < 7; dayOffset++)
             {
-                // her gün için tek bir day bilgisi oluşturuyoruz
-                var day = new DailyPlanDto
-                {
-                    Date = start.AddDays(dayOffset)
-                };
+                var day = new DailyPlanDto { Date = start.AddDays(dayOffset) };
 
-                // her gün 3 öğün oluşturuyoruz
-                for (int mealIndex = 0; mealIndex < mealTypes.Length; mealIndex++)
-                {
-                    // tarifler biterse döngüyü kesiyoruz
-                    if (recipeIndex >= recommended.Count)
-                        break;
+                
+                var usedToday = new HashSet<int>();
 
-                    var rec = recommended[recipeIndex].Recipe;
-                    recipeIndex++;
+                var bRec = PickNextDistinct(breakfastRecommended, usedToday, ref bIndex);
+                day.Meals.Add(MapToMealItemDto("Kahvalt�", bRec));
 
-                    double cal = rec.NutritionFacts?.Calories ?? 0;
+                var lRec = PickNextDistinct(lunchRecommended, usedToday, ref lIndex);
+                day.Meals.Add(MapToMealItemDto("��le", lRec));
 
-                    // günlük öğün listesine item ekliyoruz
-                    day.Meals.Add(new MealItemDto
-                    {
-                        MealType = mealTypes[mealIndex],
-                        RecipeId = rec.Id,
-                        RecipeName = rec.Name,
-                        Description = rec.Description,
-                        Calories = cal,
-                        CookingTime = rec.CookingTime,
-                        DietType = rec.DietType
-                    });
-                }
+                var dRec = PickNextDistinct(dinnerRecommended, usedToday, ref dIndex);
+                day.Meals.Add(MapToMealItemDto("Ak�am", dRec));
 
-                // oluşturduğumuz gün weeklyPlan içine ekleniyor
                 weeklyPlan.Days.Add(day);
             }
 
-            // finalde haftalık planı dönüyoruz
             return weeklyPlan;
+        }
+
+        private static Recipe PickNextDistinct(List<RecommendationResult> list, HashSet<int> usedIds, ref int index)
+        {
+            if (list == null || list.Count == 0)
+                throw new InvalidOperationException("�neri listesi bo�.");
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                var rec = list[index % list.Count].Recipe;
+                index++;
+
+                if (rec != null && usedIds.Add(rec.Id))
+                    return rec;
+            }
+
+            
+            return list[(index - 1 + list.Count) % list.Count].Recipe;
+        }
+
+        private static MealItemDto MapToMealItemDto(string mealType, Recipe rec)
+        {
+            return new MealItemDto
+            {
+                MealType = mealType,
+                RecipeId = rec.Id,
+                RecipeName = rec.Title,
+                Description = rec.Description,
+                Calories = rec.NutritionFacts?.Calories ?? 0,
+                CookingTime = rec.CookingTime,
+                DietType = rec.DietType ?? ""
+            };
+        }
+
+        
+        public async Task<int> SaveGeneratedPlanAsync(string userId, WeeklyPlanDto dto)
+        {
+            bool exists = await _context.WeeklyPlans
+                .AnyAsync(x => x.UserId == userId && x.StartDate.Date == dto.StartDate.Date);
+
+            if (exists)
+                throw new InvalidOperationException("Bu hafta i�in zaten bir plan�n�z var.");
+
+            
+            var profile = await _healthProfileService.GetOrCreateProfileAsync(userId);
+            var currentDiet = DietTypeNormalizer.Normalize(profile?.DietType);
+            var targetCalories = await _healthProfileService.GetTargetCaloriesAsync(userId) ?? 0;
+
+            var plan = new WeeklyPlan
+            {
+                UserId = userId,
+                Title = "Otomatik Haftal�k Plan",
+                StartDate = dto.StartDate,
+
+                
+                DietTypeSnapshot = currentDiet,
+                TargetCaloriesSnapshot = targetCalories
+            };
+
+            _context.WeeklyPlans.Add(plan);
+            await _context.SaveChangesAsync();
+
+            foreach (var day in dto.Days)
+                foreach (var meal in day.Meals)
+                {
+                    _context.WeeklyPlanItems.Add(new WeeklyPlanItem
+                    {
+                        WeeklyPlanId = plan.Id,
+                        DayOfWeek = day.Date.DayOfWeek,
+                        MealType = meal.MealType,
+                        RecipeId = meal.RecipeId
+                    });
+                }
+
+            await _context.SaveChangesAsync();
+            return plan.Id;
+        }
+
+        public async Task<int> SaveOrReplaceGeneratedPlanAsync(string userId, WeeklyPlanDto dto)
+        {
+            var existingPlan = await _context.WeeklyPlans
+                .Include(wp => wp.Items)
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.StartDate.Date == dto.StartDate.Date);
+
+            if (existingPlan != null)
+            {
+                _context.WeeklyPlanItems.RemoveRange(existingPlan.Items);
+                _context.WeeklyPlans.Remove(existingPlan);
+                await _context.SaveChangesAsync();
+            }
+
+            
+            var profile = await _healthProfileService.GetOrCreateProfileAsync(userId);
+            var currentDiet = DietTypeNormalizer.Normalize(profile?.DietType);
+            var targetCalories = await _healthProfileService.GetTargetCaloriesAsync(userId) ?? 0;
+
+            var plan = new WeeklyPlan
+            {
+                UserId = userId,
+                Title = "Otomatik Haftal�k Plan",
+                StartDate = dto.StartDate,
+
+                
+                DietTypeSnapshot = currentDiet,
+                TargetCaloriesSnapshot = targetCalories
+            };
+
+            _context.WeeklyPlans.Add(plan);
+            await _context.SaveChangesAsync();
+
+            foreach (var day in dto.Days)
+                foreach (var meal in day.Meals)
+                {
+                    _context.WeeklyPlanItems.Add(new WeeklyPlanItem
+                    {
+                        WeeklyPlanId = plan.Id,
+                        DayOfWeek = day.Date.DayOfWeek,
+                        MealType = meal.MealType,
+                        RecipeId = meal.RecipeId
+                    });
+                }
+
+            await _context.SaveChangesAsync();
+            return plan.Id;
         }
     }
 }

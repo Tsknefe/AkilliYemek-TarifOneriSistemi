@@ -1,0 +1,82 @@
+@model List<AkilliYemekTarifOneriSistemi.Models.SupportMessage>
+
+@{
+    ViewData["Title"] = "Destek";
+    var lastUtc = Model.LastOrDefault()?.CreatedAt.ToString("o") ?? "";
+}
+
+<div class="container mt-4" style="max-width:900px;">
+    <h3 class="mb-3">Admin Destek</h3>
+
+    <div id="chatBox" class="border rounded p-3 mb-3" style="height:420px; overflow:auto; background:#fff;">
+        @foreach (var m in Model)
+        {
+            var isUser = m.SenderRole == "User";
+            <div class="d-flex mb-2 @(isUser ? "justify-content-end" : "justify-content-start")">
+                <div class="p-2 rounded" style="max-width:70%; @(isUser ? "background:#e7f1ff;" : "background:#f3f3f3;")">
+                    <div style="font-size:12px; opacity:.7;">
+                        @(isUser ? "Sen" : "Admin") • @m.CreatedAt.ToLocalTime().ToString("HH:mm")
+                    </div>
+                    <div>@m.Message</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <form asp-action="Send" method="post" class="d-flex gap-2">
+        @Html.AntiForgeryToken()
+        <input name="message" class="form-control" placeholder="Mesaj yaz..." autocomplete="off" />
+        <button class="btn btn-primary" type="submit">Gönder</button>
+    </form>
+</div>
+
+<script>
+    const chatBox = document.getElementById("chatBox");
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    let lastUtc = "@lastUtc";
+
+    async function poll() {
+        try {
+            const url = lastUtc
+                ? `/Support/Poll?afterUtc=${encodeURIComponent(lastUtc)}`
+                : `/Support/Poll`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data && data.length) {
+                data.forEach(m => {
+                    const isUser = m.senderRole === "User";
+                    const wrapper = document.createElement("div");
+                    wrapper.className = `d-flex mb-2 ${isUser ? "justify-content-end" : "justify-content-start"}`;
+
+                    const bubble = document.createElement("div");
+                    bubble.className = "p-2 rounded";
+                    bubble.style.maxWidth = "70%";
+                    bubble.style.background = isUser ? "#e7f1ff" : "#f3f3f3";
+
+                    const meta = document.createElement("div");
+                    meta.style.fontSize = "12px";
+                    meta.style.opacity = ".7";
+                    meta.textContent = (isUser ? "Sen" : "Admin") + " • " + new Date(m.createdAtUtc).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+                    const msg = document.createElement("div");
+                    msg.textContent = m.message;
+
+                    bubble.appendChild(meta);
+                    bubble.appendChild(msg);
+                    wrapper.appendChild(bubble);
+                    chatBox.appendChild(wrapper);
+
+                    lastUtc = m.createdAtUtc;
+                });
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        } catch(e) {}
+        setTimeout(poll, 3000);
+    }
+
+    poll();
+</script>

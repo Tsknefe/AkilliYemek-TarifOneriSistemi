@@ -1,38 +1,39 @@
-Ôªø@model AkilliYemekTarifOneriSistemi.Models.UserProfile
+@model AkilliYemekTarifOneriSistemi.Models.ViewModels.UserProfileEditViewModel
 @{
-    ViewData["Title"] = "Profili D√ºzenle";
+    ViewData["Title"] = "Profili D¸zenle";
 }
 
 <div class="container mt-4">
     <div class="col-md-8 offset-md-2">
-
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white d-flex justify-content-between">
-                <h4 class="mb-0">‚úèÔ∏è Profili D√ºzenle</h4>
-                <a asp-action="Index" class="btn btn-light btn-sm">‚Üê Profilime D√∂n</a>
+                <h4 class="mb-0"> Profili D¸zenle</h4>
+                <a asp-action="Index" class="btn btn-light btn-sm">ã Profilime Dˆn</a>
             </div>
 
             <div class="card-body">
                 <form asp-controller="UserProfile" asp-action="Edit" method="post">
                     @Html.AntiForgeryToken()
 
-                    <input type="hidden" asp-for="Id" />
-                    <input type="hidden" asp-for="UserId" />
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label>Ya≈ü</label>
+                            <label>Ya˛</label>
                             <input asp-for="Age" class="form-control" />
+                            <span asp-validation-for="Age" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label>Boy (cm)</label>
                             <input asp-for="HeightCm" class="form-control" />
+                            <span asp-validation-for="HeightCm" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label>Kilo (kg)</label>
                             <input asp-for="WeightKg" class="form-control" />
+                            <span asp-validation-for="WeightKg" class="text-danger"></span>
                         </div>
                     </div>
 
@@ -40,7 +41,7 @@
                         <label>Cinsiyet</label>
                         <select asp-for="Gender" class="form-select">
                             <option value="Male">Erkek</option>
-                            <option value="Female">Kadƒ±n</option>
+                            <option value="Female">Kad˝n</option>
                         </select>
                     </div>
 
@@ -64,12 +65,22 @@
                         </select>
                     </div>
 
+                    <div class="mb-3">
+                        <label>Diyet T¸r¸</label>
+                        <select asp-for="DietType" class="form-select">
+                            <option value="Normal">Normal</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Vegetarian">Vejetaryen</option>
+                            <option value="GlutenFree">Glutensiz</option>
+                            <option value="Keto">Keto</option>
+                        </select>
+                    </div>
+
                     <button type="submit" class="btn btn-primary w-100">
-                        üíæ Kaydet
+                        ?? Kaydet
                     </button>
                 </form>
             </div>
         </div>
-
     </div>
 </div>

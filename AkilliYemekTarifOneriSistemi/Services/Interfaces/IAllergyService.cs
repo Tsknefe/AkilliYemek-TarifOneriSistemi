@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Models;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Interfaces
 {

@@ -1,0 +1,27 @@
+@model AkilliYemekTarifOneriSistemi.Models.UserAllergy
+
+@{
+    ViewData["Title"] = "Alerjiyi Sil";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold mb-3"> Alerjiyi Sil</h2>
+
+    <div class="alert alert-danger">
+        <strong>@Model.Ingredient?.Name</strong> alerjisini silmek istediðinize emin misiniz?
+    </div>
+
+    <form asp-action="DeleteConfirmed" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="ingredientId" value="@Model.IngredientId" />
+
+        <button type="submit" class="btn btn-danger rounded-pill">
+            Evet, Sil
+        </button>
+
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill ms-2">
+            Vazgeç
+        </a>
+    </form>
+</div>

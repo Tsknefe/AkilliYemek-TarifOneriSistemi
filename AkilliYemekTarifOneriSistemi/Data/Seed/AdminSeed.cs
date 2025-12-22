@@ -1,4 +1,7 @@
-ï»¿using Microsoft.AspNetCore.Identity;
+using AkilliYemekTarifOneriSistemi.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AkilliYemekTarifOneriSistemi.Data.Seed
 {
@@ -9,13 +12,13 @@ namespace AkilliYemekTarifOneriSistemi.Data.Seed
             var roleManager = service.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = service.GetRequiredService<UserManager<IdentityUser>>();
 
-            // Admin rolÃ¼
+            
             if (!await roleManager.RoleExistsAsync("Admin"))
             {
                 await roleManager.CreateAsync(new IdentityRole("Admin"));
             }
 
-            // Admin kullanÄ±cÄ±
+            
             var adminEmail = "admin@akilliyemek.com";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
@@ -30,7 +33,34 @@ namespace AkilliYemekTarifOneriSistemi.Data.Seed
 
                 await userManager.CreateAsync(adminUser, "Admin123!");
                 await userManager.AddToRoleAsync(adminUser, "Admin");
+
             }
+            await SeedIngredientsAsync(service);
+
+        }
+        private static async Task SeedIngredientsAsync(IServiceProvider service)
+        {
+            using var scope = service.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            
+            if (await db.Ingredients.AnyAsync())
+                return;
+
+            db.Ingredients.AddRange(
+                new Ingredient { Name = "Süt" },
+                new Ingredient { Name = "Yumurta" },
+                new Ingredient { Name = "Un" },
+                new Ingredient { Name = "Fýstýk" },
+                new Ingredient { Name = "Gluten" },
+                new Ingredient { Name = "Domates" },
+                new Ingredient { Name = "Tavuk" }
+            );
+
+            await db.SaveChangesAsync();
         }
     }
 }
+
+
+

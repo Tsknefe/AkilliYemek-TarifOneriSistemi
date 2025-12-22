@@ -1,0 +1,68 @@
+@model AkilliYemekTarifOneriSistemi.Services.Interfaces.WeeklyPlanDto
+
+@{
+    ViewData["Title"] = "Otomatik Haftalýk Plan";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="display-6"> Otomatik Haftalýk Plan</h1>
+            <p class="text-muted">Günlük hedef: <b>@Model?.TargetDailyCalories</b> kcal</p>
+        </div>
+
+        <a asp-controller="WeeklyPlans" asp-action="Index" class="btn btn-outline-primary">
+            ‹ Manuel Planlara Dön
+        </a>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+        return;
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <form method="post" asp-action="Save" class="mb-4">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+        <button class="btn btn-success"> Planý Kaydet</button>
+    </form>
+
+    <div class="row row-cols-1 row-cols-lg-2 g-3">
+        @foreach (var day in Model.Days)
+        {
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            @day.Date.ToString("dddd, dd MMMM yyyy",
+                                     new System.Globalization.CultureInfo("tr-TR"))
+                        </h5>
+
+                        @foreach (var meal in day.Meals)
+                        {
+                            <div class="border rounded p-2 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <b>@meal.MealType</b>
+                                    <span>@meal.Calories kcal</span>
+                                </div>
+                                <a asp-controller="Recipes"
+                                   asp-action="Details"
+                                   asp-route-id="@meal.RecipeId">
+                                    @meal.RecipeName
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>

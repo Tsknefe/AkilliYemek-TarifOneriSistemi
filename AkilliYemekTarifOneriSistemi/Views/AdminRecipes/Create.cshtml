@@ -1,48 +1,50 @@
-ï»¿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+@model AkilliYemekTarifOneriSistemi.Models.Recipe
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>âž• Yeni Tarif Ekle</h2>
+<h2> Yeni Tarif Ekle</h2>
 
 <form asp-action="Create"
       method="post"
       enctype="multipart/form-data">
 
+    @Html.AntiForgeryToken()
+
     <div class="mb-3">
-        <label class="form-label">BaÅŸlÄ±k</label>
+        <label class="form-label">Baþlýk</label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">AÃ§Ä±klama</label>
+        <label class="form-label">Açýklama</label>
         <textarea asp-for="Description" class="form-control"></textarea>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
     <div class="row">
         <div class="col-md-4 mb-3">
-            <label class="form-label">PiÅŸirme SÃ¼resi (dk)</label>
+            <label class="form-label">Piþirme Süresi (dk)</label>
             <input asp-for="CookingTime" class="form-control" />
             <span asp-validation-for="CookingTime" class="text-danger"></span>
         </div>
 
         <div class="col-md-4 mb-3">
-            <label class="form-label">HazÄ±rlÄ±k SÃ¼resi (dk)</label>
+            <label class="form-label">Hazýrlýk Süresi (dk)</label>
             <input asp-for="PreparationTimeMinutes" class="form-control" />
         </div>
 
         <div class="col-md-4 mb-3">
-            <label class="form-label">KaÃ§ KiÅŸilik</label>
+            <label class="form-label">Kaç Kiþilik</label>
             <input asp-for="Servings" class="form-control" />
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label class="form-label">Diyet TÃ¼rÃ¼</label>
+            <label class="form-label">Diyet Türü</label>
             <input asp-for="DietType"
                    class="form-control"
                    placeholder="Vegan / Vejetaryen / Normal" />
@@ -51,7 +53,7 @@
         <div class="col-md-6 mb-3">
             <label class="form-label">Zorluk</label>
             <select asp-for="Difficulty" class="form-select">
-                <option value="">SeÃ§iniz</option>
+                <option value="">Seçiniz</option>
                 <option>Kolay</option>
                 <option>Orta</option>
                 <option>Zor</option>
@@ -60,14 +62,24 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label">HazÄ±rlanÄ±ÅŸ</label>
+        <label class="form-label">Öðün Etiketleri (MealTags)</label>
+        <input asp-for="MealTags" class="form-control" placeholder="breakfast,lunch,dinner,snack" />
+        <small class="text-muted">
+            Virgülle ayýr: <b>breakfast</b>, <b>lunch</b>, <b>dinner</b>, <b>snack</b><br />
+            Örn: <i>breakfast</i> veya <i>lunch,dinner</i>
+        </small>
+        <span asp-validation-for="MealTags" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Hazýrlanýþ</label>
         <textarea asp-for="Instructions"
                   class="form-control"
                   rows="4"></textarea>
     </div>
 
     <div class="mb-4">
-        <label class="form-label">FotoÄŸraf</label>
+        <label class="form-label">Fotoðraf</label>
         <input type="file"
                name="imageFile"
                class="form-control"
@@ -75,8 +87,7 @@
     </div>
 
     <button type="submit" class="btn btn-success">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary ms-2">Ä°ptal</a>
-
+    <a asp-action="Index" class="btn btn-secondary ms-2">Ýptal</a>
 </form>
 
 @section Scripts {

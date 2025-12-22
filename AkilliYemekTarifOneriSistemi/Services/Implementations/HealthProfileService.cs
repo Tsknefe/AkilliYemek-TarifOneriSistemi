@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -14,9 +14,7 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _context = context;
         }
 
-        // ============================
-        // PROFİL
-        // ============================
+       
         public async Task<UserProfile?> GetProfileAsync(string userId)
         {
             return await _context.UserProfiles
@@ -24,9 +22,29 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 .FirstOrDefaultAsync(x => x.UserId == userId);
         }
 
-        // ============================
-        // BMI
-        // ============================
+        public async Task<UserProfile> GetOrCreateProfileAsync(string userId)
+        {
+            var profile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (profile != null) return profile;
+
+            profile = new UserProfile
+            {
+                UserId = userId,
+                Age = 25,
+                HeightCm = 170,
+                WeightKg = 70,
+                Gender = "Male",
+                ActivityLevel = "sedentary",
+                Goal = "Maintain",
+                DietType = "normal"
+            };
+
+            _context.UserProfiles.Add(profile);
+            await _context.SaveChangesAsync();
+            return profile;
+        }
+
+        
         public double CalculateBMI(double heightCm, double weightKg)
         {
             var heightMeter = heightCm / 100.0;
@@ -35,28 +53,37 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 
         public string GetBMICategory(double bmi)
         {
-            if (bmi < 18.5) return "Zayıf";
+            if (bmi < 18.5) return "Zay�f";
             if (bmi < 25) return "Normal";
             if (bmi < 30) return "Fazla Kilolu";
             return "Obez";
         }
 
-        // ============================
-        // BMR (PRIVATE)
-        // ============================
+        private static string NormalizeGender(string? gender)
+            => (gender ?? "").Trim().ToLowerInvariant();
+
+        private static string NormalizeActivityLevel(string? level)
+            => (level ?? "").Trim().ToLowerInvariant();
+
+        private static string NormalizeGoal(string? goal)
+            => (goal ?? "").Trim().ToLowerInvariant();
+
         private double CalculateBmr(UserProfile p)
         {
-            return p.Gender == "Male"
-                ? 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age + 5
-                : 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age - 161;
+            var g = NormalizeGender(p.Gender);
+            bool isMale = g == "male" || g == "erkek";
+
+            if (isMale)
+                return 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age + 5;
+
+            return 10 * p.WeightKg + 6.25 * p.HeightCm - 5 * p.Age - 161;
         }
 
-        // ============================
-        // AKTİVİTE ÇARPANI
-        // ============================
-        private double GetActivityMultiplier(string level)
+        private double GetActivityMultiplier(string? level)
         {
-            return level switch
+            var l = NormalizeActivityLevel(level);
+
+            return l switch
             {
                 "sedentary" => 1.2,
                 "light" => 1.375,
@@ -67,9 +94,6 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             };
         }
 
-        // ============================
-        // BAKIM KALORİSİ
-        // ============================
         public double CalculateMaintenanceCalories(UserProfile profile)
         {
             double bmr = CalculateBmr(profile);
@@ -77,9 +101,6 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             return Math.Round(bmr * multiplier);
         }
 
-        // ============================
-        // HEDEF KALORİ
-        // ============================
         public async Task<double?> GetTargetCaloriesAsync(string userId)
         {
             var profile = await GetProfileAsync(userId);
@@ -87,18 +108,15 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
                 return null;
 
             double maintenance = CalculateMaintenanceCalories(profile);
+            var goal = NormalizeGoal(profile.Goal);
 
-            return profile.Goal switch
+            return goal switch
             {
-                "Lose" => maintenance - 300,
-                "Gain" => maintenance + 300,
+                "lose" => maintenance - 300,
+                "gain" => maintenance + 300,
                 _ => maintenance
             };
         }
-
-        // ============================
-        // MAKRO HEDEFLERİ
-        // ============================
         public async Task<(double proteinGr, double fatGr, double carbGr)?> GetMacroTargetsAsync(string userId)
         {
             var calories = await GetTargetCaloriesAsync(userId);
@@ -107,7 +125,6 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 
             double total = calories.Value;
 
-            // %25 protein – %30 yağ – %45 karbonhidrat
             double proteinCal = total * 0.25;
             double fatCal = total * 0.30;
             double carbCal = total * 0.45;

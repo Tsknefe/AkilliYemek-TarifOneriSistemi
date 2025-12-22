@@ -1,0 +1,50 @@
+@model List<(string userId, string? userEmail, DateTime lastAt)>
+
+@{
+    ViewData["Title"] = "Destek Mesajlarý (Admin)";
+}
+
+<div class="container mt-4">
+    <h3 class="mb-3">Destek Mesajlarý</h3>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">Henüz mesaj yok.</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Kullanýcý</th>
+                            <th>Son Mesaj Zamaný</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div><strong>@(t.userEmail ?? "(email yok)")</strong></div>
+                                    <div style="font-size:12px; opacity:.7;">UserId: @t.userId</div>
+                                </td>
+                                <td>@t.lastAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-primary"
+                                       asp-controller="AdminSupport"
+                                       asp-action="Thread"
+                                       asp-route-userId="@t.userId">
+                                        Aç
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

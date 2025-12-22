@@ -1,15 +1,15 @@
-ï»¿@{
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var latestRecipes = ViewBag.LatestRecipes as List<AkilliYemekTarifOneriSistemi.Models.Recipe>;
 }
 
-<h2 class="mb-4">ğŸ“Š Admin Dashboard</h2>
+<h2 class="mb-4"> Admin Dashboard</h2>
 
 <div class="row mb-4">
     <div class="col-md-4">
         <div class="card text-white bg-primary">
             <div class="card-body">
-                <h5 class="card-title">ğŸ½ï¸ Toplam Tarif</h5>
+                <h5 class="card-title"> Toplam Tarif</h5>
                 <h2>@ViewBag.RecipeCount</h2>
             </div>
         </div>
@@ -18,7 +18,7 @@
     <div class="col-md-4">
         <div class="card text-white bg-success">
             <div class="card-body">
-                <h5 class="card-title">ğŸ¥• Toplam Malzeme</h5>
+                <h5 class="card-title"> Toplam Malzeme</h5>
                 <h2>@ViewBag.IngredientCount</h2>
             </div>
         </div>
@@ -27,20 +27,20 @@
     <div class="col-md-4">
         <div class="card text-white bg-dark">
             <div class="card-body">
-                <h5 class="card-title">ğŸ› ï¸ Admin Panel</h5>
-                <p>Her ÅŸey kontrol altÄ±nda</p>
+                <h5 class="card-title"> Admin Panel</h5>
+                <p>Bütün Yönetim İşlemlerinin Yapıldığı Yer</p>
             </div>
         </div>
     </div>
 </div>
 
-<h4>ğŸ†• Son Eklenen Tarifler</h4>
+<h4>S Son Eklenen Tarifler</h4>
 
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>BaÅŸlÄ±k</th>
-            <th>SÃ¼re</th>
+            <th>Başlık</th>
+            <th>Süre</th>
             <th>Zorluk</th>
         </tr>
     </thead>

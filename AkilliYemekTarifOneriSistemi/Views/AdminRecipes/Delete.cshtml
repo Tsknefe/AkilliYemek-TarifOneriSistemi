@@ -1,17 +1,18 @@
-﻿@model AkilliYemekTarifOneriSistemi.Models.Recipe
+@model AkilliYemekTarifOneriSistemi.Models.Recipe
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>🗑️ Tarif Sil</h2>
+<h2> Tarif Sil</h2>
 
 <div class="alert alert-danger">
-    <strong>@Model.Title</strong> adlı tarifi silmek istediğinize emin misiniz?
+    <strong>@Model.Title</strong> adl� tarifi silmek istedi�inize emin misiniz?
 </div>
 
 <form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
     <button type="submit" class="btn btn-danger">Evet, Sil</button>
-    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+    <a asp-action="Index" class="btn btn-secondary">Vazge�</a>
 </form>

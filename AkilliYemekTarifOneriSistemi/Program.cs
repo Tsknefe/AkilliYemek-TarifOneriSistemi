@@ -14,9 +14,9 @@ namespace AkilliYemekTarifOneriSistemi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ===============================
-            // ?? DATABASE CONNECTION
-            // ===============================
+            
+            
+            
             var connectionString =
                 builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -28,9 +28,9 @@ namespace AkilliYemekTarifOneriSistemi
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            // ===============================
-            // ?? IDENTITY (Admin / User)
-            // ===============================
+            
+            
+            
             builder.Services
                 .AddDefaultIdentity<IdentityUser>(options =>
                 {
@@ -39,27 +39,28 @@ namespace AkilliYemekTarifOneriSistemi
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            // ===============================
-            // ?? CONTROLLERS + JSON
-            // ===============================
-            builder.Services.AddControllers()
+            
+            
+            
+            builder.Services.AddControllersWithViews()
                 .AddJsonOptions(o =>
                 {
                     o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                     o.JsonSerializerOptions.WriteIndented = true;
                 });
 
+            
             builder.Services.AddRazorPages();
 
-            // ===============================
-            // ?? SWAGGER
-            // ===============================
+            
+            
+            
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // ===============================
-            // ?? CORS (React)
-            // ===============================
+            
+            
+            
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ReactDevClient", policy =>
@@ -72,9 +73,9 @@ namespace AkilliYemekTarifOneriSistemi
                 });
             });
 
-            // ===============================
-            // ?? SERVICES (DI)
-            // ===============================
+            
+            
+            
             builder.Services.AddScoped<INutritionService, NutritionService>();
             builder.Services.AddScoped<IIngredientService, IngredientService>();
             builder.Services.AddScoped<IRecipeService, RecipeService>();
@@ -84,19 +85,23 @@ namespace AkilliYemekTarifOneriSistemi
             builder.Services.AddScoped<IAllergyService, AllergyService>();
             builder.Services.AddScoped<IWeeklyPlanService, WeeklyPlanService>();
 
+
             var app = builder.Build();
 
-            // ===============================
-            // ?? SEED (Admin Role + User)
-            // ===============================
+            
+            
+            
             using (var scope = app.Services.CreateScope())
             {
                 await AdminSeed.SeedAdminAsync(scope.ServiceProvider);
+
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                await TestDataSeed.SeedAsync(db);
             }
 
-            // ===============================
-            // ?? MIDDLEWARE PIPELINE
-            // ===============================
+            
+            
+            
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -118,10 +123,9 @@ namespace AkilliYemekTarifOneriSistemi
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // ===============================
-            // ??? ROUTES
-            // ===============================
-            app.MapControllers();
+            
+            
+            
 
             app.MapControllerRoute(
                 name: "default",

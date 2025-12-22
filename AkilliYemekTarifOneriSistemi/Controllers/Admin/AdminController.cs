@@ -1,4 +1,4 @@
-﻿using AkilliYemekTarifOneriSistemi.Services.Interfaces;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

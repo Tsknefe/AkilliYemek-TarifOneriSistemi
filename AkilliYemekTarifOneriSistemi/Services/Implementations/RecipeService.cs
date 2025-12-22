@@ -1,13 +1,11 @@
-﻿using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Services.DietRules;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Services.Implementations
 {
-    // bu servis tariflerle ilgili bütün temel işlemleri yapan yer
-    // crud operasyonları burada dönüyor ve controller sadece burayı çağırıyor
-    // besin değerleri veya malzeme kısmı burada değil onlar kendi servislerinde
     public class RecipeService : IRecipeService
     {
         private readonly ApplicationDbContext _context;
@@ -17,56 +15,86 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _context = context;
         }
 
-        // tüm tarifleri listelediğimiz metod
-        // arama varsa isim açıklama veya diyet tipine göre filtreleme yapıyoruz
-        // include ler ile besin değerleri ve malzemeleri de birlikte çekiyoruz çünkü frontend bunları gösteriyor
         public async Task<List<Recipe>> GetAllAsync(string? search = null)
         {
             var query = _context.Recipes
                 .Include(r => r.NutritionFacts)
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
+                .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Ingredient)
                 .AsQueryable();
 
-            // arama kutusu boş değilse filtre uyguluyoruz
             if (!string.IsNullOrWhiteSpace(search))
             {
+                var s = search.Trim();
+
                 query = query.Where(r =>
-                    r.Name.Contains(search) ||
-                    r.Description.Contains(search) ||
-                    r.DietType.Contains(search));
+                    (r.Title != null && r.Title.Contains(s)) ||
+                    (r.Name != null && r.Name.Contains(s)) ||
+                    (r.Description != null && r.Description.Contains(s)) ||
+                    (r.DietType != null && r.DietType.Contains(s)));
             }
 
             return await query.ToListAsync();
         }
 
-        // tek bir tarifi id ile getirme
-        // detay ekranı bunu kullanıyor
-        // include lerle ilişkili tüm veriler birlikte geliyor
+        
+        public async Task<List<Recipe>> GetAllWithCategoryAsync(string? search = null)
+        {
+            var query = _context.Recipes
+                .Include(r => r.Category) 
+                .Include(r => r.NutritionFacts)
+                .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Ingredient)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+
+                query = query.Where(r =>
+                    (r.Title != null && r.Title.Contains(s)) ||
+                    (r.Name != null && r.Name.Contains(s)) ||
+                    (r.Description != null && r.Description.Contains(s)) ||
+                    (r.DietType != null && r.DietType.Contains(s)));
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<Recipe?> GetByIdAsync(int id)
         {
             return await _context.Recipes
+                .Include(r => r.Category) 
                 .Include(r => r.NutritionFacts)
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
+                .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Ingredient)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
-        // yeni tarif ekleme
-        // burada basitçe kaydedip geri dönüyoruz başka işlem yok
         public async Task<Recipe> CreateAsync(Recipe recipe)
         {
+            
+            if (recipe.CategoryId.HasValue)
+            {
+                recipe.Category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Id == recipe.CategoryId.Value);
+            }
+            recipe.DietType = DietTypeNormalizer.Normalize(recipe.DietType);
+
+
+            
+            recipe.MealTags = PrepareMealTags(recipe.MealTags, recipe);
+
             _context.Recipes.Add(recipe);
             await _context.SaveChangesAsync();
             return recipe;
         }
 
-        // tarif güncelleme işlemi
-        // önce tarif var mı diye buluyoruz yoksa null dönüyoruz
-        // sonra alanları tek tek güncelliyoruz
         public async Task<Recipe?> UpdateAsync(Recipe recipe)
         {
-            var existing = await _context.Recipes.FindAsync(recipe.Id);
+            var existing = await _context.Recipes
+                .Include(r => r.Category) 
+                .FirstOrDefaultAsync(r => r.Id == recipe.Id);
+
+            existing.DietType = DietTypeNormalizer.Normalize(recipe.DietType);
+
             if (existing == null)
                 return null;
 
@@ -75,13 +103,33 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             existing.CookingTime = recipe.CookingTime;
             existing.Servings = recipe.Servings;
             existing.DietType = recipe.DietType;
+            existing.Instructions = recipe.Instructions;
+            existing.ImagePath = recipe.ImagePath;
+            existing.Title = recipe.Title;
+            existing.ShortDescription = recipe.ShortDescription;
+            existing.ImageUrl = recipe.ImageUrl;
+            existing.PreparationTimeMinutes = recipe.PreparationTimeMinutes;
+            existing.Difficulty = recipe.Difficulty;
+            existing.CategoryId = recipe.CategoryId;
+
+            
+            if (recipe.CategoryId.HasValue)
+            {
+                existing.Category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Id == recipe.CategoryId.Value);
+            }
+            else
+            {
+                existing.Category = null;
+            }
+
+            
+            existing.MealTags = PrepareMealTags(recipe.MealTags, existing);
 
             await _context.SaveChangesAsync();
             return existing;
         }
 
-        // tarif silme işlemi
-        // tarif varsa siliyoruz yoksa false
         public async Task<bool> DeleteAsync(int id)
         {
             var recipe = await _context.Recipes.FindAsync(id);
@@ -91,6 +139,61 @@ namespace AkilliYemekTarifOneriSistemi.Services.Implementations
             _context.Recipes.Remove(recipe);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        
+
+        private static string PrepareMealTags(string? incomingMealTags, Recipe recipeForCategory)
+        {
+            
+            if (!string.IsNullOrWhiteSpace(incomingMealTags))
+                return NormalizeMealTags(incomingMealTags);
+
+            
+            return AutoAssignMealTagsByCategory(recipeForCategory);
+        }
+
+        private static string AutoAssignMealTagsByCategory(Recipe recipe)
+        {
+            if (recipe.Category == null || string.IsNullOrWhiteSpace(recipe.Category.Name))
+                return "";
+
+            var category = recipe.Category.Name.Trim().ToLower();
+
+            return category switch
+            {
+                "kahvalt�" => "breakfast",
+
+                
+                "�orba" => "lunch",
+                "salata" => "lunch",
+
+                
+                "ana yemek" => "dinner",
+                "makarna" => "dinner",
+
+                
+                "vejetaryen" => "lunch,dinner",
+
+                
+                "tatl�" => "snack",
+                "at��t�rmal�k" => "snack",
+
+                _ => ""
+            };
+        }
+    
+        private static string NormalizeMealTags(string tags)
+        {
+            var allowed = new HashSet<string> { "breakfast", "lunch", "dinner", "snack" };
+
+            var cleaned = tags
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(x => x.Trim().ToLower())
+                .Where(x => allowed.Contains(x))
+                .Distinct();
+
+            return string.Join(",", cleaned);
         }
     }
 }

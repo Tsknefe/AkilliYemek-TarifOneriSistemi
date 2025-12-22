@@ -1,4 +1,4 @@
-﻿namespace AkilliYemekTarifOneriSistemi.Models
+namespace AkilliYemekTarifOneriSistemi.Models
 {
     public class NutritionFacts
     {
@@ -13,7 +13,7 @@
         public double Carbs { get; set; }
 
 
-        //ilk olarak bunları yazdım sonrasında çeşitlendirebiliriz
+        
         public double Fiber { get; set; }
         public double Sugar { get; set; }
         public double Sodium { get; set; }

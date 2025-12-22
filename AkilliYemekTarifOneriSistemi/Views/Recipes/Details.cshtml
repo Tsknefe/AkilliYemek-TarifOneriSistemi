@@ -1,13 +1,47 @@
 @model AkilliYemekTarifOneriSistemi.Models.Recipe
 
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model?.Title ?? "Tarif Detayı";
 }
 
-<!-- ================= HEADER ================= -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="fw-bold">@Model.Title</h1>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div>
+        <h1 class="fw-bold mb-1">@Model.Title</h1>
 
+        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+        {
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                <a asp-controller="AdminRecipes"
+                   asp-action="Edit"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-warning rounded-pill px-4">
+                    ✏️ Düzenle
+                </a>
+
+                <a asp-controller="AdminRecipes"
+                   asp-action="Delete"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-danger rounded-pill px-4">
+                     Sil
+                </a>
+
+                <a asp-controller="AdminRecipeIngredients"
+                   asp-action="Index"
+                   asp-route-recipeId="@Model.Id"
+                   class="btn btn-info rounded-pill px-4">
+                     Malzemeleri Yönet
+                </a>
+
+                <a asp-controller="AdminRecipes"
+                   asp-action="Index"
+                   class="btn btn-outline-danger rounded-pill px-4">
+                    Admin Panel
+                </a>
+            </div>
+        }
+    </div>
+
+    <!-- FAVORITE BUTTONS -->
     @if (User.Identity?.IsAuthenticated == true)
     {
         if (ViewBag.IsFavorite == true)
@@ -28,14 +62,13 @@
                   asp-route-id="@Model.Id">
                 @Html.AntiForgeryToken()
                 <button class="btn btn-danger rounded-pill">
-                    ❤️ Favorilere Ekle
+                    ❤ Favorilere Ekle
                 </button>
             </form>
         }
     }
 </div>
 
-<!-- ================= IMAGE ================= -->
 @if (!string.IsNullOrEmpty(Model.ImageUrl))
 {
     <img src="@Model.ImageUrl"
@@ -43,62 +76,103 @@
          style="max-height:420px;object-fit:cover;width:100%;" />
 }
 
-<!-- ================= META ================= -->
-<div class="mb-4">
-    <span class="badge bg-dark fs-6 me-2">
-        ⏱️ @Model.CookingTime dk
-    </span>
+<div class="mb-4 d-flex flex-wrap gap-2">
+    @if (Model.CookingTime > 0)
+    {
+        <span class="badge bg-dark fs-6">
+             @Model.CookingTime dk
+        </span>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.DietType))
+    {
+        <span class="badge bg-secondary fs-6">
+             @Model.DietType
+        </span>
+    }
+    @if (Model.Servings > 0)
+    {
+        <span class="badge bg-light text-dark border fs-6">
+             @Model.Servings kişilik
+        </span>
+    }
 </div>
 
-<p class="lead">
-    @Model.Description
-</p>
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <p class="lead">@Model.Description</p>
+}
+else
+{
+    <p class="text-muted">Bu tarif için açıklama eklenmemiş.</p>
+}
 
 <hr />
 
-<!-- ================= INGREDIENTS ================= -->
-<h3 class="mb-3">🧂 Malzemeler</h3>
+<h3 class="mb-3"> Malzemeler</h3>
 
-<table class="table table-hover align-middle">
-    <thead class="table-light">
-        <tr>
-            <th>Malzeme</th>
-            <th>Miktar</th>
-            <th>Gram</th>
-            <th>Kalori</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.RecipeIngredients)
+@{
+    var ingredients = Model.RecipeIngredients ?? new List<AkilliYemekTarifOneriSistemi.Models.RecipeIngredient>();
+    var totalGrams = ingredients.Sum(x => x.CalculatedGrams);
+}
+
+@if (!ingredients.Any())
+{
+    <div class="alert alert-warning rounded-4">
+        Bu tarife henüz malzeme eklenmemiş.
+        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
         {
-            var ingredientCalories =
-            Model.NutritionFacts != null && Model.RecipeIngredients.Sum(x => x.CalculatedGrams) > 0
-            ? Model.NutritionFacts.Calories
-            * (item.CalculatedGrams / Model.RecipeIngredients.Sum(x => x.CalculatedGrams))
-            : 0;
-
-            <tr>
-                <td class="fw-semibold">@item.Ingredient.Name</td>
-                <td>@item.Quantity @item.Unit</td>
-                <td>@Math.Round(item.CalculatedGrams, 1) g</td>
-                <td>@Math.Round(ingredientCalories, 1) kcal</td>
-            </tr>
+            <div class="mt-2">
+                <a asp-controller="AdminRecipeIngredients"
+                   asp-action="Index"
+                   asp-route-recipeId="@Model.Id"
+                   class="btn btn-sm btn-info rounded-pill px-3">
+                     Malzeme Ekle
+                </a>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}
+else
+{
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Malzeme</th>
+                <th>Miktar</th>
+                <th>Gram</th>
+                <th>Kalori</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in ingredients)
+            {
+                var ingredientCalories =
+                (Model.NutritionFacts != null && totalGrams > 0)
+                ? Model.NutritionFacts.Calories * (item.CalculatedGrams / totalGrams)
+                : 0;
 
-<!-- ================= NUTRITION CARDS ================= -->
+                <tr>
+                    <td class="fw-semibold">@item.Ingredient?.Name</td>
+                    <td>@item.Quantity @item.Unit</td>
+                    <td>@Math.Round(item.CalculatedGrams, 1) g</td>
+                    <td>@Math.Round(ingredientCalories, 1) kcal</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 @if (Model.NutritionFacts != null)
 {
     <hr />
-    <h3 class="mb-4">📊 Toplam Besin Değerleri</h3>
+    <h3 class="mb-4"> Toplam Besin Değerleri</h3>
 
     <div class="row g-3 text-center">
 
         <div class="col-md-2 col-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
-                    <div class="fs-4">🔥</div>
+                    <div class="fs-4"></div>
                     <strong>@Math.Round(Model.NutritionFacts.Calories, 0)</strong>
                     <div class="text-muted small">Kalori (kcal)</div>
                 </div>
@@ -108,7 +182,7 @@
         <div class="col-md-2 col-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
-                    <div class="fs-4">🥩</div>
+                    <div class="fs-4"></div>
                     <strong>@Math.Round(Model.NutritionFacts.Protein, 1)</strong>
                     <div class="text-muted small">Protein (g)</div>
                 </div>
@@ -118,7 +192,7 @@
         <div class="col-md-2 col-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
-                    <div class="fs-4">🧈</div>
+                    <div class="fs-4"></div>
                     <strong>@Math.Round(Model.NutritionFacts.Fat, 1)</strong>
                     <div class="text-muted small">Yağ (g)</div>
                 </div>
@@ -128,7 +202,7 @@
         <div class="col-md-2 col-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
-                    <div class="fs-4">🍞</div>
+                    <div class="fs-4"></div>
                     <strong>@Math.Round(Model.NutritionFacts.Carbs, 1)</strong>
                     <div class="text-muted small">Karbonhidrat (g)</div>
                 </div>
@@ -138,7 +212,7 @@
         <div class="col-md-2 col-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
-                    <div class="fs-4">🍬</div>
+                    <div class="fs-4"></div>
                     <strong>@Math.Round(Model.NutritionFacts.Sugar, 1)</strong>
                     <div class="text-muted small">Şeker (g)</div>
                 </div>
@@ -148,7 +222,7 @@
         <div class="col-md-2 col-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body">
-                    <div class="fs-4">🌾</div>
+                    <div class="fs-4"></div>
                     <strong>@Math.Round(Model.NutritionFacts.Fiber, 1)</strong>
                     <div class="text-muted small">Lif (g)</div>
                 </div>

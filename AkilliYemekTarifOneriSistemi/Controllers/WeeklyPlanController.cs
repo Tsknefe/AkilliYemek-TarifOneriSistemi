@@ -1,47 +1,89 @@
-﻿using AkilliYemekTarifOneriSistemi.Services.Interfaces;
+using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Services.DietRules;
+using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
-    // bu controller haftalık beslenme planı sayfasını yönetiyor
-    // kullanıcı kendi profil bilgilerine göre otomatik plan oluşturabiliyor
-    // kullanıcı giriş yapmadan bu sayfaya erişemiyor çünkü kişisel plan üretimi gerekiyor
     [Authorize]
     public class WeeklyPlanController : Controller
     {
         private readonly IWeeklyPlanService _weeklyPlanService;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        // servis dışarıdan geliyor böylece hem test edilebilir hem bağımlılık azaltılmış oluyor
-        public WeeklyPlanController(IWeeklyPlanService weeklyPlanService)
+        public WeeklyPlanController(
+            IWeeklyPlanService weeklyPlanService,
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext context)
         {
             _weeklyPlanService = weeklyPlanService;
+            _userManager = userManager;
+            _context = context;
         }
 
-        // kullanıcı Id sini identity üzerinden alıyoruz
-        private string? GetUserId() =>
-            User.FindFirstValue(ClaimTypes.NameIdentifier);
+        private string? GetUserId() => _userManager.GetUserId(User);
 
-        // haftalık plan ekranı GET metodu
-        // startDate verilirse o haftadan başlıyor verilmezse bugünden itibaren devam ediyor
+        [HttpGet]
         public async Task<IActionResult> Index(DateTime? startDate = null)
         {
             var userId = GetUserId();
-            if (userId == null) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            // servis ile asıl plan oluşturma işlemi yapılıyor
-            var plan = await _weeklyPlanService.GenerateWeeklyPlanAsync(userId, startDate);
+            var start = (startDate ?? DateTime.Today).Date;
 
-            // plan null dönerse genelde tarif yok ya da kullanıcı profili eksik olduğu için
-            if (plan == null)
+            var profile = await _context.UserProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            var currentDiet = DietTypeNormalizer.Normalize(profile?.DietType);
+
+            
+            var existing = await _context.WeeklyPlans
+                .AsNoTracking()
+                .Where(x => x.UserId == userId && x.StartDate.Date == start.Date)
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefaultAsync();
+
+            if (existing != null)
             {
-                ViewBag.Error = "Plan oluşturulamadı. Lütfen profil bilgilerinizi doldurduğunuzdan ve yeterli tarif olduğundan emin olun.";
-                return View(null);
+                var oldDiet = DietTypeNormalizer.Normalize(existing.DietTypeSnapshot);
+
+                if (oldDiet != currentDiet)
+                {
+                    ViewBag.Warning = $"Profil diyet t�r�n�z de�i�ti ({oldDiet} � {currentDiet}). Plan yeniden olu�turuldu. Kaydet�e basarak g�ncelleyebilirsiniz.";
+                }
             }
 
-            // planı view a gönderiyoruz model WeeklyPlanDto
+            var plan = await _weeklyPlanService.GenerateWeeklyPlanAsync(userId, start);
+
+            if (plan == null)
+                ViewBag.Error = "Plan olu�turulamad�. Profil bilgilerinizi doldurun.";
+
             return View(plan);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Save(DateTime startDate)
+        {
+            var userId = GetUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var dto = await _weeklyPlanService.GenerateWeeklyPlanAsync(userId, startDate);
+            if (dto == null)
+            {
+                TempData["ErrorMessage"] = "Plan kaydedilemedi. Profil bilgilerinizi kontrol edin.";
+                return RedirectToAction(nameof(Index), new { startDate });
+            }
+
+            int id = await _weeklyPlanService.SaveOrReplaceGeneratedPlanAsync(userId, dto);
+
+            TempData["SuccessMessage"] = "Otomatik plan kaydedildi/g�ncellendi.";
+            return RedirectToAction("Details", "WeeklyPlans", new { id });
         }
     }
 }

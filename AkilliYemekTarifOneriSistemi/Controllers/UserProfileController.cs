@@ -1,10 +1,12 @@
-﻿using AkilliYemekTarifOneriSistemi.Data;
+using AkilliYemekTarifOneriSistemi.Data;
 using AkilliYemekTarifOneriSistemi.Models;
+using AkilliYemekTarifOneriSistemi.Models.ViewModels;
+using AkilliYemekTarifOneriSistemi.Services.DietRules;
 using AkilliYemekTarifOneriSistemi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace AkilliYemekTarifOneriSistemi.Controllers
 {
@@ -13,88 +15,85 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IHealthProfileService _healthService;
+        private readonly UserManager<IdentityUser> _userManager;
 
         public UserProfileController(
             ApplicationDbContext context,
-            IHealthProfileService healthService)
+            IHealthProfileService healthService,
+            UserManager<IdentityUser> userManager)
         {
             _context = context;
             _healthService = healthService;
+            _userManager = userManager;
         }
 
-        private string? GetCurrentUserId()
-        {
-            return User.FindFirstValue(ClaimTypes.NameIdentifier);
-        }
+        private string? GetCurrentUserId() => _userManager.GetUserId(User); 
 
-        // ============================
-        // INDEX – PROFİL ÖZETİ
-        // ============================
         public async Task<IActionResult> Index()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            var profile = await _context.UserProfiles
-                .FirstOrDefaultAsync(x => x.UserId == userId);
+            var profile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (profile == null) return RedirectToAction(nameof(Edit));
 
-            if (profile == null)
-                return RedirectToAction(nameof(Edit));
-
-            FillHealthViewBags(profile, userId);
-
+            await FillHealthViewBagsAsync(profile, userId);
             return View(profile);
         }
 
-        // ============================
-        // GET – PROFİL DÜZENLE
-        // ============================
+        
         public async Task<IActionResult> Edit()
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            var profile = await _context.UserProfiles
-                .FirstOrDefaultAsync(x => x.UserId == userId);
+            var profile = await _context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
 
             if (profile == null)
             {
                 profile = new UserProfile
                 {
-                    UserId = userId,
+                    UserId = userId, 
                     Age = 25,
                     HeightCm = 170,
                     WeightKg = 70,
                     Gender = "Male",
                     ActivityLevel = "sedentary",
                     Goal = "Maintain",
-                    DietType = "Normal"
+                    DietType = "normal"
                 };
 
                 _context.UserProfiles.Add(profile);
                 await _context.SaveChangesAsync();
             }
 
-            return View(profile);
+            var vm = new UserProfileEditViewModel
+            {
+                Age = profile.Age,
+                HeightCm = profile.HeightCm,
+                WeightKg = profile.WeightKg,
+                Gender = profile.Gender,
+                ActivityLevel = profile.ActivityLevel,
+                Goal = profile.Goal,
+                DietType = profile.DietType
+            };
+
+            return View(vm);
         }
 
-        // ============================
-        // POST – PROFİL GÜNCELLE
-        // ============================
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(UserProfile model)
+        public async Task<IActionResult> Edit(UserProfileEditViewModel model)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
-
-            var existing = await _context.UserProfiles
-                .FirstOrDefaultAsync(x => x.UserId == userId);
-
-            if (existing == null) return NotFound();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
             if (!ModelState.IsValid)
                 return View(model);
+
+            var existing = await _context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (existing == null) return NotFound();
 
             existing.Age = model.Age;
             existing.HeightCm = model.HeightCm;
@@ -102,27 +101,22 @@ namespace AkilliYemekTarifOneriSistemi.Controllers
             existing.Gender = model.Gender;
             existing.ActivityLevel = model.ActivityLevel;
             existing.Goal = model.Goal;
-            existing.DietType = model.DietType;
 
-            // 🔥 EF CORE ZORLA UPDATE
-            _context.Entry(existing).State = EntityState.Modified;
+            existing.DietType = DietTypeNormalizer.Normalize(model.DietType);
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Profiliniz başarıyla güncellendi";
-
+            TempData["SuccessMessage"] = "Profiliniz ba�ar�yla g�ncellendi";
             return RedirectToAction(nameof(Index));
         }
 
-        // ============================
-        // HESAPLAMALAR
-        // ============================
-        private void FillHealthViewBags(UserProfile profile, string userId)
+        private async Task FillHealthViewBagsAsync(UserProfile profile, string userId)
         {
             var bmi = _healthService.CalculateBMI(profile.HeightCm, profile.WeightKg);
             var bmiCategory = _healthService.GetBMICategory(bmi);
             var maintenance = _healthService.CalculateMaintenanceCalories(profile);
-            var target = _healthService.GetTargetCaloriesAsync(userId).Result;
+
+            var target = await _healthService.GetTargetCaloriesAsync(userId);
 
             ViewBag.BMI = Math.Round(bmi, 1);
             ViewBag.BMICategory = bmiCategory;

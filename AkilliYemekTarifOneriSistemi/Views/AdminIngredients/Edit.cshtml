@@ -1,10 +1,10 @@
-ï»¿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+@model AkilliYemekTarifOneriSistemi.Models.Ingredient
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>âœï¸ Malzeme DÃ¼zenle</h2>
+<h2> Malzeme Düzenle</h2>
 
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
@@ -16,12 +16,12 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Ä°ngilizce Ad</label>
+        <label class="form-label">İngilizce Ad</label>
         <input asp-for="EnglishName" class="form-control" />
     </div>
 
-    <button type="submit" class="btn btn-primary">GÃ¼ncelle</button>
-    <a asp-action="Index" class="btn btn-secondary">Ä°ptal</a>
+    <button type="submit" class="btn btn-primary">Güncelle</button>
+    <a asp-action="Index" class="btn btn-secondary">İptal</a>
 </form>
 
 @section Scripts {

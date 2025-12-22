@@ -1,16 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Porsiyon</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <style>
-        /* NAVBAR GENEL */
         .custom-navbar {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -26,12 +24,11 @@
             transition: all .2s ease;
         }
 
-        .navbar-nav .nav-link:hover {
-            background-color: rgba(111, 29, 27, 0.08);
-            color: #6f1d1b;
-        }
+            .navbar-nav .nav-link:hover {
+                background-color: rgba(111, 29, 27, 0.08);
+                color: #6f1d1b;
+            }
 
-        /* DROPDOWN */
         .dropdown-menu {
             border: none;
             border-radius: 16px;
@@ -47,18 +44,16 @@
             transition: background .2s ease;
         }
 
-        .dropdown-item:hover {
-            background-color: rgba(111, 29, 27, 0.08);
-            color: #6f1d1b;
-        }
+            .dropdown-item:hover {
+                background-color: rgba(111, 29, 27, 0.08);
+                color: #6f1d1b;
+            }
 
-        /* LOGIN / ADMIN BUTONLARI */
         .navbar .btn {
             border-radius: 999px;
             padding: 6px 16px;
         }
 
-        /* FOOTER */
         footer {
             border-top: 1px solid rgba(0,0,0,0.05);
         }
@@ -67,128 +62,122 @@
 
 <body>
 
-<header>
-    <nav class="navbar navbar-expand-lg custom-navbar fixed-top">
-        <div class="container">
+    <header>
+        <nav class="navbar navbar-expand-lg custom-navbar fixed-top">
+            <div class="container">
 
-            <!-- LOGO -->
-            <a class="navbar-brand d-flex align-items-center gap-2"
-               asp-controller="Home" asp-action="Index">
-                <img src="~/images/1logo.png"
-                     class="navbar-logo"
-                     alt="Porsiyon Logo" />
-            </a>
+                <a class="navbar-brand d-flex align-items-center gap-2"
+                   asp-controller="Home" asp-action="Index">
+                    <img src="~/images/1logo.png"
+                         class="navbar-logo"
+                         alt="Porsiyon Logo" />
+                </a>
 
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#navbarMain">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <button class="navbar-toggler" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarMain">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="collapse navbar-collapse" id="navbarMain">
+                <div class="collapse navbar-collapse" id="navbarMain">
 
-                <!-- SOL MENÜ -->
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           asp-controller="Home"
-                           asp-action="Index">
-                            Ana Sayfa
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               asp-controller="Home"
+                               asp-action="Index">
+                                Ana Sayfa
+                            </a>
+                        </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           asp-controller="Recipes"
-                           asp-action="Index">
-                            Tarifler
-                        </a>
-                    </li>
-
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
                         <li class="nav-item">
                             <a class="nav-link"
                                asp-controller="Recipes"
-                               asp-action="Favorites">
-                                Favoriler
+                               asp-action="Index">
+                                Tarifler
                             </a>
                         </li>
 
-                        <!-- PROFİL MENÜSÜ -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle"
-                               href="#"
-                               role="button"
-                               data-bs-toggle="dropdown">
-                                Profilim
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link"
+                                   asp-controller="Recipes"
+                                   asp-action="Favorites">
+                                    Favoriler
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle"
+                                   href="#"
+                                   role="button"
+                                   data-bs-toggle="dropdown">
+                                    Profilim
+                                </a>
+
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="UserProfile"
+                                           asp-action="Index">
+                                            Profil Bilgilerim
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="UserAllergies"
+                                           asp-action="Index">
+                                            Alerjilerim
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="WeeklyPlans"
+                                           asp-action="Index">
+                                            Haftal�k Planlar�m
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                        {
+                            <a asp-controller="AdminRecipes"
+                               asp-action="Index"
+                               class="btn btn-outline-danger rounded-pill fw-semibold">
+                                Admin
                             </a>
+                        }
 
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item"
-                                       asp-controller="UserProfile"
-                                       asp-action="Index">
-                                        Profil Bilgilerim
-                                    </a>
-                                </li>
+                        <partial name="_LoginPartial" />
+                    </div>
 
-                                <li>
-                                    <a class="dropdown-item"
-                                       asp-controller="UserAllergies"
-                                       asp-action="Index">
-                                        Alerjilerim
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a class="dropdown-item"
-                                       asp-controller="WeeklyPlans"
-                                       asp-action="Index">
-                                        Haftalık Planlarım
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    }
-                </ul>
-
-                <!-- SAĞ MENÜ -->
-                <div class="d-flex align-items-center gap-2">
-
-                    @* SADECE ADMIN GÖRÜR *@
-                    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
-                    {
-                        <a href="/admin"
-                           class="btn btn-outline-danger rounded-pill fw-semibold">
-                            Admin
-                        </a>
-                    }
-
-                    <partial name="_LoginPartial" />
                 </div>
-
             </div>
-        </div>
-    </nav>
-</header>
+        </nav>
+    </header>
 
-<!-- NAVBAR FIXED OLDUĞU İÇİN BOŞLUK -->
-<div style="height: 80px;"></div>
+    <div style="height: 80px;"></div>
 
-<main class="container py-4">
-    @RenderBody()
-</main>
+    <main class="container py-4">
+        @RenderBody()
+    </main>
 
-<footer class="text-center text-muted py-4 small">
-    © 2025 PORSİYON • Akıllı Yemek Tarif Sistemi
-</footer>
+    <footer class="text-center text-muted py-4 small">
+        � 2025 PORS�YON � Ak�ll� Yemek Tarif Sistemi
+    </footer>
 
-<!-- SCRIPTS -->
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-@await RenderSectionAsync("Scripts", required: false)
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿public class UserDislike
+public class UserDislike
 {
     public int Id { get; set; }
     public string UserId { get; set; }

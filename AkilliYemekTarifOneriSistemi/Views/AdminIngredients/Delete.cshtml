@@ -1,17 +1,17 @@
-﻿@model AkilliYemekTarifOneriSistemi.Models.Ingredient
+@model AkilliYemekTarifOneriSistemi.Models.Ingredient
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>🗑️ Malzeme Sil</h2>
+<h2> Malzeme Sil</h2>
 
 <div class="alert alert-danger">
-    <strong>@Model.Name</strong> adlı malzemeyi silmek istediğinize emin misiniz?
+    <strong>@Model.Name</strong> adl� malzemeyi silmek istedi�inize emin misiniz?
 </div>
 
 <form asp-action="Delete" method="post">
     <input type="hidden" asp-for="Id" />
     <button type="submit" class="btn btn-danger">Evet, Sil</button>
-    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+    <a asp-action="Index" class="btn btn-secondary">Vazge�</a>
 </form>
